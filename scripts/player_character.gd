@@ -98,24 +98,31 @@ func _physics_process(delta: float) -> void:
 
 func align_to_planet() -> void:
 	# Get the up direction (away from planet center)
-	var up_direction = -gravity_direction
+	var planet_up = -gravity_direction
 
 	# Smoothly align the character to the planet surface
 	var current_up = global_transform.basis.y
 	var target_basis = global_transform.basis
 
 	# Create rotation to align Y axis with up direction
-	var rotation_axis = current_up.cross(up_direction)
+	var rotation_axis = current_up.cross(planet_up)
 	if rotation_axis.length() > 0.001:
-		var rotation_angle = current_up.angle_to(up_direction)
+		var rotation_angle = current_up.angle_to(planet_up)
 		target_basis = target_basis.rotated(rotation_axis.normalized(), rotation_angle * 0.1)
 		global_transform.basis = target_basis
 
 func position_on_planet_surface() -> void:
 	# Position character at spawn height above planet center
-	var spawn_position = Vector3(0, spawn_height, 0)
+	# Add slight offset to avoid colinear vectors in look_at
+	var spawn_position = Vector3(0.1, spawn_height, 0.1)
 	global_position = planet_center + spawn_position
 
-	# Orient toward planet surface
-	look_at(planet_center, Vector3.UP)
-	rotate_object_local(Vector3.RIGHT, PI / 2)  # Stand upright
+	# Orient toward planet surface (stand upright on sphere)
+	var to_center = (planet_center - global_position).normalized()
+	var right = Vector3.RIGHT.cross(to_center).normalized()
+	if right.length() < 0.001:  # If colinear, use different axis
+		right = Vector3.FORWARD.cross(to_center).normalized()
+	var up_vec = to_center.cross(right).normalized()
+
+	# Set basis to align character upright on sphere
+	global_transform.basis = Basis(right, -to_center, up_vec)

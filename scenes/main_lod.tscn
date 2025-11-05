@@ -67,9 +67,9 @@ atmosphere_density = 0.5
 [node name="OrbitalCamera" type="Node3D" parent="."]
 script = ExtResource("3")
 target = NodePath("../Planet")
-distance = 250.0
+distance = 350.0
 min_distance = 50.0
-max_distance = 1000.0
+max_distance = 2000.0
 rotation_speed = 0.3
 zoom_speed = 20.0
 

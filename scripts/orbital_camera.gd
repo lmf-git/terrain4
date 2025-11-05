@@ -5,9 +5,9 @@ class_name OrbitalCamera
 ## Similar to Kerbal Space Program camera system
 
 @export var target: Node3D  # The planet to orbit around
-@export var distance: float = 200.0
+@export var distance: float = 350.0
 @export var min_distance: float = 50.0
-@export var max_distance: float = 1000.0
+@export var max_distance: float = 2000.0
 
 @export_group("Movement Settings")
 @export var rotation_speed: float = 0.3
