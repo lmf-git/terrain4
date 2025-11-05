@@ -207,11 +207,7 @@ func create_mesh_from_data(vertices: PackedVector3Array, indices: PackedInt32Arr
 	add_child(mesh_instance)
 	terrain_meshes.append(mesh_instance)
 
-	# Add collision after adding to scene tree
-	call_deferred("add_collision_to_mesh", mesh_instance)
-
-func add_collision_to_mesh(mesh_instance: MeshInstance3D) -> void:
-	# Create collision shape from mesh
+	# Add collision immediately after adding to scene tree
 	mesh_instance.create_trimesh_collision()
 
 func _process(_delta: float) -> void:
