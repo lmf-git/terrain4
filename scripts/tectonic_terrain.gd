@@ -268,8 +268,12 @@ func create_mesh_from_data(vertices: PackedVector3Array, indices: PackedInt32Arr
 	mesh_instance.material_override = terrain_material
 	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 
-	# Add collision
-	mesh_instance.create_trimesh_collision()
-
 	add_child(mesh_instance)
 	terrain_meshes.append(mesh_instance)
+
+	# Add collision after adding to scene tree
+	call_deferred("add_collision_to_mesh", mesh_instance)
+
+func add_collision_to_mesh(mesh_instance: MeshInstance3D) -> void:
+	# Create collision shape from mesh
+	mesh_instance.create_trimesh_collision()
