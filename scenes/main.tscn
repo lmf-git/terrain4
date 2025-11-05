@@ -1,0 +1,75 @@
+[gd_scene load_steps=8 format=3 uid="uid://main_scene"]
+
+[ext_resource type="Script" path="res://scripts/spherical_terrain.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/spherical_water.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/orbital_camera.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/atmosphere.gd" id="4"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.5
+glow_strength = 1.0
+glow_bloom = 0.1
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.005
+volumetric_fog_albedo = Color(0.5, 0.6, 0.8, 1)
+
+[node name="Main" type="Node3D"]
+
+[node name="Planet" type="Node3D" parent="."]
+
+[node name="SphericalTerrain" type="Node3D" parent="Planet"]
+script = ExtResource("1")
+planet_radius = 100.0
+terrain_height = 10.0
+subdivisions = 5
+noise_scale = 0.5
+noise_octaves = 6
+noise_persistence = 0.5
+noise_lacunarity = 2.0
+seed_value = 12345
+
+[node name="SphericalWater" type="Node3D" parent="Planet"]
+script = ExtResource("2")
+planet_radius = 100.0
+water_level = 2.0
+subdivisions = 4
+wave_speed = 0.5
+wave_scale = 1.0
+wave_height = 0.3
+
+[node name="Atmosphere" type="MeshInstance3D" parent="Planet"]
+script = ExtResource("4")
+planet_radius = 100.0
+atmosphere_radius = 110.0
+atmosphere_density = 0.5
+
+[node name="OrbitalCamera" type="Node3D" parent="."]
+script = ExtResource("3")
+target = NodePath("../Planet")
+distance = 250.0
+min_distance = 50.0
+max_distance = 1000.0
+rotation_speed = 0.3
+zoom_speed = 20.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 150, 100)
+light_color = Color(1, 0.95, 0.9, 1)
+light_energy = 1.5
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[editable path="Planet"]
