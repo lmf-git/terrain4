@@ -6,14 +6,14 @@ class_name SphericalTerrain
 
 @export_group("Planet Properties")
 @export var planet_radius: float = 100.0
-@export var terrain_height: float = 10.0
-@export var subdivisions: int = 5  # Number of icosphere subdivisions
+@export var terrain_height: float = 8.0
+@export var subdivisions: int = 6  # Number of icosphere subdivisions
 
 @export_group("Terrain Generation")
-@export var noise_scale: float = 0.5
-@export var noise_octaves: int = 6
-@export var noise_persistence: float = 0.5
-@export var noise_lacunarity: float = 2.0
+@export var noise_scale: float = 0.3
+@export var noise_octaves: int = 3
+@export var noise_persistence: float = 0.4
+@export var noise_lacunarity: float = 2.5
 @export var seed_value: int = 12345
 
 @export_group("LOD Settings")
@@ -32,7 +32,7 @@ func _ready() -> void:
 func setup_noise() -> void:
 	noise = FastNoiseLite.new()
 	noise.seed = seed_value
-	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	noise.noise_type = FastNoiseLite.TYPE_PERLIN  # Smoother than simplex
 	noise.fractal_octaves = noise_octaves
 	noise.fractal_gain = noise_persistence
 	noise.fractal_lacunarity = noise_lacunarity
@@ -146,12 +146,11 @@ func get_terrain_height(normal: Vector3) -> float:
 	var y = normal.y
 	var z = normal.z
 
-	# Use 3D noise for seamless spherical terrain
-	var height = noise.get_noise_3d(x * 10, y * 10, z * 10)
+	# Use 3D noise for seamless spherical terrain (smoother with fewer layers)
+	var height = noise.get_noise_3d(x * 5, y * 5, z * 5)
 
-	# Add additional layers
-	height += noise.get_noise_3d(x * 30, y * 30, z * 30) * 0.5
-	height += noise.get_noise_3d(x * 60, y * 60, z * 60) * 0.25
+	# Add one subtle detail layer
+	height += noise.get_noise_3d(x * 15, y * 15, z * 15) * 0.3
 
 	return height * terrain_height
 

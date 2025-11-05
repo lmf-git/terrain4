@@ -1,0 +1,95 @@
+[gd_scene load_steps=9 format=3 uid="uid://player_tectonic_scene"]
+
+[ext_resource type="Script" path="res://scripts/tectonic_terrain.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/spherical_water.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/atmosphere.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/player_character.gd" id="4"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.5
+height = 1.8
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.5
+glow_strength = 1.0
+glow_bloom = 0.1
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.005
+volumetric_fog_albedo = Color(0.5, 0.6, 0.8, 1)
+
+[node name="Main" type="Node3D"]
+
+[node name="Planet" type="Node3D" parent="."]
+
+[node name="TectonicTerrain" type="Node3D" parent="Planet"]
+script = ExtResource("1")
+planet_radius = 100.0
+terrain_height = 15.0
+subdivisions = 6
+num_plates = 8
+plate_seed = 12345
+mountain_height = 1.0
+ocean_depth = 0.3
+polar_flatness = 0.7
+polar_extent = 0.3
+continental_roughness = 0.3
+oceanic_smoothness = 0.9
+erosion_amount = 0.5
+
+[node name="SphericalWater" type="Node3D" parent="Planet"]
+script = ExtResource("2")
+planet_radius = 100.0
+water_level = 2.0
+subdivisions = 4
+wave_speed = 0.5
+wave_scale = 1.0
+wave_height = 0.3
+
+[node name="Atmosphere" type="MeshInstance3D" parent="Planet"]
+script = ExtResource("3")
+planet_radius = 100.0
+atmosphere_radius = 110.0
+atmosphere_density = 0.5
+
+[node name="Player" type="CharacterBody3D" parent="."]
+script = ExtResource("4")
+planet_radius = 100.0
+spawn_height = 118.0
+walk_speed = 5.0
+sprint_speed = 10.0
+jump_velocity = 6.0
+gravity_strength = 15.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 150, 100)
+light_color = Color(1, 0.95, 0.9, 1)
+light_energy = 1.5
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="DebugLabel" type="Label" parent="."]
+offset_right = 500.0
+offset_bottom = 120.0
+text = "TECTONIC TERRAIN (Player Mode)
+• Walk on realistic terrain
+• Explore mountains and valleys
+• Polar regions"
+metadata/_edit_use_anchors_ = true
+
+[editable path="Planet"]

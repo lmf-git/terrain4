@@ -2,21 +2,38 @@
 
 A complete spherical planetary terrain system with water for Godot 4.5, inspired by games like ARMA 3 and Kerbal Space Program.
 
-## Four View Modes
+## Six View Modes
 
-**When you run the project, you'll see a launcher with four options:**
+**When you run the project, you'll see a launcher with six options:**
 
-**Basic Modes:**
-- Press **O** for Orbital Camera mode (KSP-style view from space)
-- Press **P** for Player Mode (first-person character on the planet surface)
+**Basic Modes (Smooth Terrain):**
+- Press **O** for Orbital Camera mode (smooth simple terrain)
+- Press **P** for Player Mode (smooth simple terrain)
 
-**Optimized Modes (NEW - LOD System):**
+**Tectonic Terrain (NEW - Realistic Geology):**
+- Press **T** for Orbital Camera with tectonic plates
+- Press **Y** for Player Mode with tectonic plates
+
+**Optimized Modes (LOD System):**
 - Press **L** for Orbital Camera with LOD optimizations
 - Press **K** for Player Mode with LOD optimizations
 
-The LOD-optimized modes feature advanced rendering techniques for better performance on large terrains.
-
 ## Features
+
+### 🌋 Tectonic Plate System (NEW)
+- **8 Tectonic Plates**: Randomly generated plate centers on the sphere
+- **Realistic Mountains**: Form at plate collision boundaries
+- **Continental vs Oceanic**: Two plate types with different elevations
+  - Continental plates: Above sea level with moderate roughness
+  - Oceanic plates: Below sea level, very smooth ocean floors
+- **Polar Regions**: Flattened terrain at north and south poles
+- **Smooth Transitions**: Realistic erosion and terrain smoothing
+- **Configurable Parameters**:
+  - Number of plates (default: 8)
+  - Mountain height at boundaries
+  - Ocean depth
+  - Polar flatness and extent
+  - Continental roughness vs oceanic smoothness
 
 ### ⚡ Advanced LOD System (NEW)
 - **Frustum Culling**: Only renders terrain chunks visible to the camera
@@ -31,11 +48,12 @@ The LOD-optimized modes feature advanced rendering techniques for better perform
 
 ### 🌍 Spherical Terrain Generation
 - **Icosphere-based mesh generation** with customizable subdivision levels
-- **Noise-based heightmap** using FastNoiseLite for realistic terrain variation
-- **Multi-octave noise** for varied terrain features (mountains, valleys, plains)
-- **Two terrain systems**:
-  - Basic: Simple single-mesh terrain (good for small planets)
-  - LOD: Advanced chunk-based system with culling (best for large planets)
+- **Three terrain systems**:
+  - **Basic**: Smooth noise-based terrain (6 subdivisions, Perlin noise)
+  - **Tectonic**: Realistic plate tectonics with mountains and oceans
+  - **LOD**: Advanced chunk-based system with culling (best for large planets)
+- **Improved smoothness**: Reduced from 6 to 3 octaves, Perlin instead of Simplex
+- **Higher detail**: Increased subdivisions from 5 to 6 for smoother curves
 - **PBR materials** with proper normal mapping and lighting
 
 ### 🌊 Realistic Water System
@@ -78,12 +96,15 @@ The LOD-optimized modes feature advanced rendering techniques for better perform
 terrain4/
 ├── scenes/
 │   ├── launcher.tscn          # Mode selection launcher
-│   ├── main.tscn              # Orbital camera mode (basic)
-│   ├── player_mode.tscn       # First-person player mode (basic)
+│   ├── main.tscn              # Orbital camera (smooth basic)
+│   ├── player_mode.tscn       # Player mode (smooth basic)
+│   ├── main_tectonic.tscn     # Orbital (tectonic plates)
+│   ├── player_tectonic.tscn   # Player (tectonic plates)
 │   ├── main_lod.tscn          # Orbital with LOD optimization
 │   └── player_mode_lod.tscn   # Player with LOD optimization
 ├── scripts/
-│   ├── spherical_terrain.gd   # Basic terrain generation
+│   ├── spherical_terrain.gd   # Basic smooth terrain
+│   ├── tectonic_terrain.gd    # Tectonic plate terrain
 │   ├── spherical_terrain_lod.gd  # LOD terrain system
 │   ├── terrain_chunk.gd       # Individual terrain chunk
 │   ├── spherical_water.gd     # Water system controller
@@ -124,6 +145,18 @@ Edit in `OrbitalCamera` node:
 - **rotation_speed**: Keyboard rotation speed (default: 0.3)
 - **zoom_speed**: Zoom speed (default: 20.0)
 
+### Tectonic Terrain Settings (Tectonic Scenes Only)
+Edit in `TectonicTerrain` node:
+- **num_plates**: Number of tectonic plates (default: 8)
+- **plate_seed**: Random seed for plate generation (default: 12345)
+- **mountain_height**: Height multiplier for mountains (default: 1.0)
+- **ocean_depth**: Depth multiplier for ocean floors (default: 0.3)
+- **polar_flatness**: How flat poles are, 0-1 (default: 0.7)
+- **polar_extent**: How far from poles, 0-1 (default: 0.3)
+- **continental_roughness**: Roughness of continents (default: 0.3)
+- **oceanic_smoothness**: Smoothness of oceans (default: 0.9)
+- **erosion_amount**: Overall terrain smoothing (default: 0.5)
+
 ### LOD System Settings (LOD Scenes Only)
 Edit in `SphericalTerrainLOD` node:
 - **enable_lod**: Enable/disable LOD system (default: true)
@@ -140,8 +173,10 @@ Edit in `SphericalTerrainLOD` node:
 ## Controls
 
 ### Launcher
-- **O**: Launch Orbital Camera mode (basic)
-- **P**: Launch Player Mode (basic)
+- **O**: Launch Orbital Camera (smooth basic)
+- **P**: Launch Player Mode (smooth basic)
+- **T**: Launch Orbital Camera (tectonic plates)
+- **Y**: Launch Player Mode (tectonic plates)
 - **L**: Launch Orbital Camera with LOD (optimized)
 - **K**: Launch Player Mode with LOD (optimized)
 - **ESC**: Quit
