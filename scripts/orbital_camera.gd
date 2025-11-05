@@ -36,7 +36,12 @@ func _ready() -> void:
 	camera.fov = 75.0
 	camera.near = 0.1
 	camera.far = 10000.0
+	camera.current = true  # Make this the active camera
 	add_child(camera)
+
+	# Set initial rotation (45 degree angle looking down at planet)
+	rotation_x = -0.5  # Look down slightly
+	rotation_y = 0.0  # Face forward
 
 	# Initialize rotation
 	target_distance = distance

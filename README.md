@@ -2,6 +2,12 @@
 
 A complete spherical planetary terrain system with water for Godot 4.5, inspired by games like ARMA 3 and Kerbal Space Program.
 
+## Two View Modes
+
+**When you run the project, you'll see a launcher with two options:**
+- Press **O** for Orbital Camera mode (KSP-style view from space)
+- Press **P** for Player Mode (first-person character on the planet surface)
+
 ## Features
 
 ### 🌍 Spherical Terrain Generation
@@ -30,6 +36,14 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 - **Smooth interpolated movement**
 - **Configurable distances and speeds**
 
+### 🚶 First-Person Player Mode
+- **Spherical gravity system** aligned to planet center
+- **WASD movement** with Sprint (Shift key)
+- **Mouse look** with captured cursor
+- **Jump mechanics** working with planetary gravity
+- **Character auto-aligns** to planet surface
+- Walk on any part of the spherical terrain
+
 ### 🌅 Atmospheric Effects
 - **Atmospheric scattering shader** creates blue halo around planet
 - **Procedural sky** with proper horizon colors
@@ -42,12 +56,16 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 ```
 terrain4/
 ├── scenes/
-│   └── main.tscn              # Main scene with all components
+│   ├── launcher.tscn          # Mode selection launcher
+│   ├── main.tscn              # Orbital camera mode
+│   └── player_mode.tscn       # First-person player mode
 ├── scripts/
 │   ├── spherical_terrain.gd   # Terrain generation system
 │   ├── spherical_water.gd     # Water system controller
-│   ├── orbital_camera.gd      # Camera controller
-│   └── atmosphere.gd          # Atmosphere renderer
+│   ├── orbital_camera.gd      # Orbital camera controller
+│   ├── player_character.gd    # First-person player controller
+│   ├── atmosphere.gd          # Atmosphere renderer
+│   └── scene_selector.gd      # Mode launcher UI
 ├── shaders/
 │   ├── water.gdshader         # Water shader with waves
 │   └── atmosphere.gdshader    # Atmospheric scattering
@@ -83,11 +101,24 @@ Edit in `OrbitalCamera` node:
 
 ## Controls
 
+### Launcher
+- **O**: Launch Orbital Camera mode
+- **P**: Launch Player Mode
+- **ESC**: Quit
+
+### Orbital Camera Mode
 - **Right Mouse Button + Drag**: Rotate camera around planet
 - **Middle Mouse Button + Drag**: Pan camera
 - **Mouse Wheel**: Zoom in/out
 - **Arrow Keys**: Rotate camera
 - **ESC**: Quit application
+
+### Player Mode
+- **WASD**: Move (forward/left/back/right)
+- **Shift**: Sprint
+- **Space**: Jump
+- **Mouse**: Look around (cursor is captured)
+- **ESC**: Release cursor (press again to quit)
 
 ## Technical Details
 
