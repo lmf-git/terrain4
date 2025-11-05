@@ -90,7 +90,7 @@ func generate_terrain_chunks() -> void:
 
 func divide_into_chunks(vertices: PackedVector3Array, indices: PackedInt32Array) -> void:
 	# Simple chunking: divide triangles into spatial groups
-	var triangles_per_chunk = max(1, int(indices.size() / (3 * chunk_divisions)))
+	var triangles_per_chunk = max(1, int(float(indices.size()) / float(3 * chunk_divisions)))
 
 	for chunk_idx in range(chunk_divisions):
 		var chunk_indices: PackedInt32Array = []

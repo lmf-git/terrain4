@@ -38,12 +38,16 @@ func setup(verts: PackedVector3Array, idx: PackedInt32Array, mat: Material, lod_
 	# Set initial LOD
 	set_lod(0)
 
-	# Add collision (use highest detail mesh)
-	if lod_meshes.size() > 0:
-		chunk_mesh.create_trimesh_collision()
-
 	# Calculate AABB
 	calculate_aabb()
+
+	# Add collision after adding to scene tree (use highest detail mesh)
+	if lod_meshes.size() > 0:
+		call_deferred("add_collision")
+
+func add_collision() -> void:
+	if chunk_mesh:
+		chunk_mesh.create_trimesh_collision()
 
 func generate_lod_meshes(lod_count: int) -> void:
 	# Generate multiple LOD levels with progressively fewer triangles
