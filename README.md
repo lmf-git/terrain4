@@ -2,19 +2,40 @@
 
 A complete spherical planetary terrain system with water for Godot 4.5, inspired by games like ARMA 3 and Kerbal Space Program.
 
-## Two View Modes
+## Four View Modes
 
-**When you run the project, you'll see a launcher with two options:**
+**When you run the project, you'll see a launcher with four options:**
+
+**Basic Modes:**
 - Press **O** for Orbital Camera mode (KSP-style view from space)
 - Press **P** for Player Mode (first-person character on the planet surface)
 
+**Optimized Modes (NEW - LOD System):**
+- Press **L** for Orbital Camera with LOD optimizations
+- Press **K** for Player Mode with LOD optimizations
+
+The LOD-optimized modes feature advanced rendering techniques for better performance on large terrains.
+
 ## Features
+
+### ⚡ Advanced LOD System (NEW)
+- **Frustum Culling**: Only renders terrain chunks visible to the camera
+- **Distance-Based LOD**: Automatically reduces mesh detail for distant terrain
+  - 4 LOD levels with configurable distances
+  - Seamless transitions between detail levels
+- **Chunk-Based Terrain**: Divides sphere into manageable chunks
+- **Distance Culling**: Hides terrain beyond max view distance
+- **Occlusion-Ready**: Framework supports occlusion culling
+- **Performance Optimized**: Update frequency configurable (default: 10 FPS)
+- **Perfect for large-scale planets** with thousands of triangles
 
 ### 🌍 Spherical Terrain Generation
 - **Icosphere-based mesh generation** with customizable subdivision levels
 - **Noise-based heightmap** using FastNoiseLite for realistic terrain variation
 - **Multi-octave noise** for varied terrain features (mountains, valleys, plains)
-- **LOD system ready** - Framework in place for Level of Detail optimization
+- **Two terrain systems**:
+  - Basic: Simple single-mesh terrain (good for small planets)
+  - LOD: Advanced chunk-based system with culling (best for large planets)
 - **PBR materials** with proper normal mapping and lighting
 
 ### 🌊 Realistic Water System
@@ -57,10 +78,14 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 terrain4/
 ├── scenes/
 │   ├── launcher.tscn          # Mode selection launcher
-│   ├── main.tscn              # Orbital camera mode
-│   └── player_mode.tscn       # First-person player mode
+│   ├── main.tscn              # Orbital camera mode (basic)
+│   ├── player_mode.tscn       # First-person player mode (basic)
+│   ├── main_lod.tscn          # Orbital with LOD optimization
+│   └── player_mode_lod.tscn   # Player with LOD optimization
 ├── scripts/
-│   ├── spherical_terrain.gd   # Terrain generation system
+│   ├── spherical_terrain.gd   # Basic terrain generation
+│   ├── spherical_terrain_lod.gd  # LOD terrain system
+│   ├── terrain_chunk.gd       # Individual terrain chunk
 │   ├── spherical_water.gd     # Water system controller
 │   ├── orbital_camera.gd      # Orbital camera controller
 │   ├── player_character.gd    # First-person player controller
@@ -99,11 +124,26 @@ Edit in `OrbitalCamera` node:
 - **rotation_speed**: Keyboard rotation speed (default: 0.3)
 - **zoom_speed**: Zoom speed (default: 20.0)
 
+### LOD System Settings (LOD Scenes Only)
+Edit in `SphericalTerrainLOD` node:
+- **enable_lod**: Enable/disable LOD system (default: true)
+- **lod_level_count**: Number of detail levels (default: 4)
+- **lod_distance_0**: Distance for highest detail (default: 150.0)
+- **lod_distance_1**: Distance for medium detail (default: 300.0)
+- **lod_distance_2**: Distance for low detail (default: 600.0)
+- **enable_frustum_culling**: Enable frustum culling (default: true)
+- **enable_distance_culling**: Enable distance culling (default: true)
+- **max_view_distance**: Maximum render distance (default: 2000.0)
+- **update_frequency**: Seconds between LOD updates (default: 0.1)
+- **chunk_divisions**: Number of terrain chunks (default: 12)
+
 ## Controls
 
 ### Launcher
-- **O**: Launch Orbital Camera mode
-- **P**: Launch Player Mode
+- **O**: Launch Orbital Camera mode (basic)
+- **P**: Launch Player Mode (basic)
+- **L**: Launch Orbital Camera with LOD (optimized)
+- **K**: Launch Player Mode with LOD (optimized)
 - **ESC**: Quit
 
 ### Orbital Camera Mode
