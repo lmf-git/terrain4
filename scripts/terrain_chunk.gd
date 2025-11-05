@@ -35,14 +35,14 @@ func setup(verts: PackedVector3Array, idx: PackedInt32Array, mat: Material, lod_
 	chunk_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(chunk_mesh)
 
-	# Set initial LOD
+	# Set initial LOD (this assigns the mesh)
 	set_lod(0)
 
 	# Calculate AABB
 	calculate_aabb()
 
-	# Add collision immediately (use highest detail mesh)
-	if lod_meshes.size() > 0 and chunk_mesh:
+	# Add collision AFTER mesh is assigned (set_lod must run first)
+	if chunk_mesh and chunk_mesh.mesh:
 		chunk_mesh.create_trimesh_collision()
 
 func generate_lod_meshes(lod_count: int) -> void:
