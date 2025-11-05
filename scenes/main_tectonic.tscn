@@ -1,6 +1,6 @@
-[gd_scene load_steps=8 format=3 uid="uid://main_lod_scene"]
+[gd_scene load_steps=8 format=3 uid="uid://main_tectonic_scene"]
 
-[ext_resource type="Script" path="res://scripts/spherical_terrain_lod.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/tectonic_terrain.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/spherical_water.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/orbital_camera.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/atmosphere.gd" id="4"]
@@ -28,26 +28,20 @@ volumetric_fog_albedo = Color(0.5, 0.6, 0.8, 1)
 
 [node name="Planet" type="Node3D" parent="."]
 
-[node name="SphericalTerrainLOD" type="Node3D" parent="Planet"]
+[node name="TectonicTerrain" type="Node3D" parent="Planet"]
 script = ExtResource("1")
 planet_radius = 100.0
-terrain_height = 10.0
-subdivisions = 5
-noise_scale = 0.5
-noise_octaves = 6
-noise_persistence = 0.5
-noise_lacunarity = 2.0
-seed_value = 12345
-enable_lod = true
-lod_level_count = 4
-lod_distance_0 = 150.0
-lod_distance_1 = 300.0
-lod_distance_2 = 600.0
-enable_frustum_culling = true
-enable_distance_culling = true
-max_view_distance = 2000.0
-update_frequency = 0.1
-chunk_divisions = 12
+terrain_height = 15.0
+subdivisions = 6
+num_plates = 8
+plate_seed = 12345
+mountain_height = 1.0
+ocean_depth = 0.3
+polar_flatness = 0.7
+polar_extent = 0.3
+continental_roughness = 0.3
+oceanic_smoothness = 0.9
+erosion_amount = 0.5
 
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
@@ -83,11 +77,13 @@ shadow_enabled = true
 environment = SubResource("Environment_1")
 
 [node name="DebugLabel" type="Label" parent="."]
-offset_right = 400.0
-offset_bottom = 100.0
-text = "LOD System Active
-Frustum Culling: ON
-Distance Culling: ON"
+offset_right = 500.0
+offset_bottom = 120.0
+text = "TECTONIC TERRAIN MODE
+• 8 Tectonic Plates
+• Realistic Mountains & Oceans
+• Polar Regions
+• Smooth Continents"
 metadata/_edit_use_anchors_ = true
 
 [editable path="Planet"]

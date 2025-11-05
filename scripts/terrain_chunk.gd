@@ -7,7 +7,7 @@ class_name TerrainChunk
 var chunk_mesh: MeshInstance3D
 var aabb: AABB
 var lod_level: int = 0
-var is_visible: bool = false
+var chunk_visible: bool = false
 var distance_from_camera: float = 0.0
 
 # Chunk properties
@@ -37,6 +37,10 @@ func setup(verts: PackedVector3Array, idx: PackedInt32Array, mat: Material, lod_
 
 	# Set initial LOD
 	set_lod(0)
+
+	# Add collision (use highest detail mesh)
+	if lod_meshes.size() > 0:
+		chunk_mesh.create_trimesh_collision()
 
 	# Calculate AABB
 	calculate_aabb()
@@ -141,12 +145,12 @@ func update_visibility(camera: Camera3D, lod_distances: Array[float]) -> void:
 
 	# Update visibility
 	var should_be_visible = frustum_visible
-	if should_be_visible != is_visible:
+	if should_be_visible != chunk_visible:
 		chunk_mesh.visible = should_be_visible
-		is_visible = should_be_visible
+		chunk_visible = should_be_visible
 
 	# Update LOD level based on distance
-	if is_visible:
+	if chunk_visible:
 		var new_lod = calculate_lod_level(lod_distances)
 		if new_lod != lod_level:
 			set_lod(new_lod)

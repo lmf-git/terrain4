@@ -6,15 +6,21 @@ var orbital_scene = "res://scenes/main.tscn"
 var player_scene = "res://scenes/player_mode.tscn"
 var orbital_lod_scene = "res://scenes/main_lod.tscn"
 var player_lod_scene = "res://scenes/player_mode_lod.tscn"
+var orbital_tectonic_scene = "res://scenes/main_tectonic.tscn"
+var player_tectonic_scene = "res://scenes/player_tectonic.tscn"
 
 func _ready() -> void:
 	# Create UI
 	var label = Label.new()
 	label.text = """Spherical Terrain Demo
 
-BASIC MODES:
+BASIC MODES (Smooth):
 O - Orbital Camera (Basic)
 P - Player Mode (Basic)
+
+TECTONIC TERRAIN (Realistic):
+T - Orbital Camera (Tectonic Plates)
+Y - Player Mode (Tectonic Plates)
 
 OPTIMIZED MODES (LOD + Culling):
 L - Orbital Camera (LOD Optimized)
@@ -22,17 +28,18 @@ K - Player Mode (LOD Optimized)
 
 ESC - Quit
 
-LOD modes feature:
-• Frustum culling (only render visible terrain)
-• Distance-based Level of Detail
-• Chunk-based terrain system
-• Better performance for large terrains"""
+Tectonic modes feature:
+• 8 Tectonic plates with realistic boundaries
+• Mountains at plate collision zones
+• Smooth ocean floors
+• Polar regions (flattened poles)
+• Continental vs oceanic terrain"""
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 
 	# Style the label
-	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_font_size_override("font_size", 20)
 
 	add_child(label)
 
@@ -46,5 +53,9 @@ func _input(event: InputEvent) -> void:
 			get_tree().change_scene_to_file(orbital_lod_scene)
 		elif event.keycode == KEY_K:
 			get_tree().change_scene_to_file(player_lod_scene)
+		elif event.keycode == KEY_T:
+			get_tree().change_scene_to_file(orbital_tectonic_scene)
+		elif event.keycode == KEY_Y:
+			get_tree().change_scene_to_file(player_tectonic_scene)
 		elif event.keycode == KEY_ESCAPE:
 			get_tree().quit()
