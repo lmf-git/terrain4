@@ -6,7 +6,7 @@ class_name PlayerCharacter
 
 @export var planet_center: Vector3 = Vector3.ZERO
 @export var planet_radius: float = 100.0
-@export var spawn_height: float = 115.0  # Spawn above terrain
+@export var spawn_height: float = 130.0  # Spawn well above terrain (max terrain ~120)
 
 @export_group("Movement")
 @export var walk_speed: float = 5.0
