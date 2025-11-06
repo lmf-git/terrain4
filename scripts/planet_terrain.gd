@@ -440,7 +440,7 @@ func generate_cities_and_caves() -> void:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = plate_seed + 6000
 
-	# Generate cities with buildings
+	# Generate cities with buildings, airports, and roads
 	if enable_cities:
 		for i in range(city_locations.size()):
 			var city_center = city_locations[i]
@@ -452,10 +452,31 @@ func generate_cities_and_caves() -> void:
 			add_child(city_node)
 			city_node.global_position = city_pos
 
-			# Generate 5-15 buildings per city
-			var num_buildings = rng.randi_range(5, 15)
+			# Calculate tangent space for city
+			var up = city_center
+			var right = Vector3.UP.cross(up)
+			if right.length_squared() < 0.01:
+				right = Vector3.RIGHT.cross(up)
+			right = right.normalized()
+			var forward = up.cross(right).normalized()
+
+			# Decide if this city has an airport (50% chance)
+			var has_airport = rng.randf() > 0.5
+
+			if has_airport:
+				# Create airport with runway at edge of city
+				create_airport(city_node, city_center, city_pos, city_height, right, forward, up, rng)
+
+			# Generate roads (grid pattern)
+			create_roads(city_node, city_center, city_pos, city_height, right, forward, up, rng)
+
+			# Generate 10-25 buildings per city
+			var num_buildings = rng.randi_range(10, 25)
 			for j in range(num_buildings):
-				create_building(city_node, city_center, city_pos, city_height, rng)
+				create_building(city_node, city_center, city_pos, city_height, right, forward, up, rng)
+
+		# Create roads between cities
+		create_intercity_roads(rng)
 
 	# Generate cave entrance markers
 	if enable_caves:
@@ -495,27 +516,33 @@ func generate_cities_and_caves() -> void:
 			# Set the transform
 			cave_mesh.global_transform.basis = Basis(right, up, -forward)
 
-func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vector3, city_height: float, rng: RandomNumberGenerator) -> void:
-	# Random building size
-	var width = rng.randf_range(4.0, 12.0)
-	var depth = rng.randf_range(4.0, 12.0)
-	var height = rng.randf_range(10.0, 40.0)
+func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vector3, city_height: float, right: Vector3, forward: Vector3, up: Vector3, rng: RandomNumberGenerator) -> void:
+	# Random building size - more variety
+	var building_type = rng.randi_range(0, 2)
+	var width: float
+	var depth: float
+	var height: float
+
+	if building_type == 0:  # Small commercial
+		width = rng.randf_range(4.0, 8.0)
+		depth = rng.randf_range(4.0, 8.0)
+		height = rng.randf_range(10.0, 20.0)
+	elif building_type == 1:  # Medium office
+		width = rng.randf_range(8.0, 15.0)
+		depth = rng.randf_range(8.0, 15.0)
+		height = rng.randf_range(20.0, 50.0)
+	else:  # Tall skyscraper
+		width = rng.randf_range(10.0, 20.0)
+		depth = rng.randf_range(10.0, 20.0)
+		height = rng.randf_range(50.0, 100.0)
 
 	# Random offset from city center (within city platform)
-	var offset_distance = rng.randf_range(0.0, city_flatten_radius * 0.7)
+	var offset_distance = rng.randf_range(0.0, city_flatten_radius * 0.6)
 	var offset_angle = rng.randf_range(0, TAU)
-
-	# Calculate tangent space for city
-	var up = city_normal
-	var right = Vector3.UP.cross(up)
-	if right.length_squared() < 0.01:
-		right = Vector3.RIGHT.cross(up)
-	right = right.normalized()
-	var forward = up.cross(right).normalized()
 
 	# Position building with offset
 	var offset = (right * cos(offset_angle) + forward * sin(offset_angle)) * offset_distance
-	var building_pos = city_center * (planet_radius + city_height + height / 2.0) + offset
+	var building_pos = city_normal * (planet_radius + city_height + height / 2.0) + offset
 
 	# Create building mesh
 	var building = MeshInstance3D.new()
@@ -546,3 +573,130 @@ func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vecto
 
 	# Add collision to building
 	building.create_trimesh_collision()
+
+func create_airport(city_node: Node3D, city_normal: Vector3, city_pos: Vector3, city_height: float, right: Vector3, forward: Vector3, up: Vector3, rng: RandomNumberGenerator) -> void:
+	# Airport positioned at edge of city
+	var airport_distance = city_flatten_radius * 0.7
+	var airport_angle = rng.randf_range(0, TAU)
+	var airport_offset = (right * cos(airport_angle) + forward * sin(airport_angle)) * airport_distance
+	var airport_pos = city_normal * (planet_radius + city_height + 0.5) + airport_offset
+
+	# Create runway (long flat rectangle)
+	var runway = MeshInstance3D.new()
+	var runway_mesh = BoxMesh.new()
+	runway_mesh.size = Vector3(40.0, 0.5, 10.0)  # Long runway
+	runway.mesh = runway_mesh
+
+	# Runway material (dark gray with white stripes would be ideal)
+	var runway_mat = StandardMaterial3D.new()
+	runway_mat.albedo_color = Color(0.2, 0.2, 0.2)  # Dark gray
+	runway_mat.metallic = 0.0
+	runway_mat.roughness = 0.8
+	runway.material_override = runway_mat
+
+	city_node.add_child(runway)
+	runway.global_position = airport_pos
+
+	# Orient runway
+	var runway_transform = runway.global_transform
+	runway_transform.basis.y = city_normal
+	runway_transform.basis.x = right
+	runway_transform.basis.z = forward
+	runway.global_transform = runway_transform
+	runway.create_trimesh_collision()
+
+	# Add small terminal building next to runway
+	var terminal = MeshInstance3D.new()
+	var terminal_mesh = BoxMesh.new()
+	terminal_mesh.size = Vector3(15.0, 5.0, 8.0)
+	terminal.mesh = terminal_mesh
+
+	var terminal_mat = StandardMaterial3D.new()
+	terminal_mat.albedo_color = Color(0.8, 0.8, 0.9)  # Light blue-gray
+	terminal_mat.metallic = 0.1
+	terminal_mat.roughness = 0.6
+	terminal.material_override = terminal_mat
+
+	var terminal_pos = airport_pos + right * 15.0
+	city_node.add_child(terminal)
+	terminal.global_position = terminal_pos
+	terminal.global_transform.basis = runway_transform.basis
+	terminal.create_trimesh_collision()
+
+func create_roads(city_node: Node3D, city_normal: Vector3, city_pos: Vector3, city_height: float, right: Vector3, forward: Vector3, up: Vector3, rng: RandomNumberGenerator) -> void:
+	# Create simple grid of roads
+	var road_mat = StandardMaterial3D.new()
+	road_mat.albedo_color = Color(0.15, 0.15, 0.15)  # Dark gray
+	road_mat.metallic = 0.0
+	road_mat.roughness = 0.9
+
+	var num_roads = 4
+	for i in range(num_roads):
+		# Road along right axis
+		var road1 = MeshInstance3D.new()
+		var road1_mesh = BoxMesh.new()
+		road1_mesh.size = Vector3(city_flatten_radius * 1.2, 0.2, 3.0)
+		road1.mesh = road1_mesh
+		road1.material_override = road_mat
+
+		var offset1 = forward * (i - num_roads / 2.0) * 6.0
+		var road1_pos = city_normal * (planet_radius + city_height + 0.1) + offset1
+		city_node.add_child(road1)
+		road1.global_position = road1_pos
+
+		var road1_transform = road1.global_transform
+		road1_transform.basis.y = city_normal
+		road1_transform.basis.x = right
+		road1_transform.basis.z = forward
+		road1.global_transform = road1_transform
+
+		# Road along forward axis
+		var road2 = MeshInstance3D.new()
+		var road2_mesh = BoxMesh.new()
+		road2_mesh.size = Vector3(3.0, 0.2, city_flatten_radius * 1.2)
+		road2.mesh = road2_mesh
+		road2.material_override = road_mat
+
+		var offset2 = right * (i - num_roads / 2.0) * 6.0
+		var road2_pos = city_normal * (planet_radius + city_height + 0.1) + offset2
+		city_node.add_child(road2)
+		road2.global_position = road2_pos
+		road2.global_transform = road1_transform
+
+func create_intercity_roads(rng: RandomNumberGenerator) -> void:
+	# Create roads connecting nearby cities
+	for i in range(city_locations.size()):
+		for j in range(i + 1, city_locations.size()):
+			var city1_normal = city_locations[i]
+			var city2_normal = city_locations[j]
+
+			# Calculate distance between cities on sphere
+			var arc_distance = acos(clamp(city1_normal.dot(city2_normal), -1.0, 1.0))
+			var linear_distance = arc_distance * planet_radius
+
+			# Only connect nearby cities (within reasonable distance)
+			if linear_distance < planet_radius * 0.5:
+				# Create a simple road segment between cities
+				var city1_height = city_heights[i]
+				var city2_height = city_heights[j]
+				var avg_height = (city1_height + city2_height) / 2.0
+
+				var city1_pos = city1_normal * (planet_radius + city1_height)
+				var city2_pos = city2_normal * (planet_radius + city2_height)
+				var midpoint = (city1_pos + city2_pos) / 2.0
+				var road_length = city1_pos.distance_to(city2_pos)
+
+				var road = MeshInstance3D.new()
+				var road_mesh = BoxMesh.new()
+				road_mesh.size = Vector3(road_length, 0.3, 4.0)
+				road.mesh = road_mesh
+
+				var road_mat = StandardMaterial3D.new()
+				road_mat.albedo_color = Color(0.12, 0.12, 0.12)
+				road_mat.metallic = 0.0
+				road_mat.roughness = 0.9
+				road.material_override = road_mat
+
+				add_child(road)
+				road.global_position = midpoint
+				road.look_at(city2_pos, Vector3.UP)
