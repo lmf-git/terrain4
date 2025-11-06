@@ -47,7 +47,7 @@ enable_advanced_shader = true
 num_plates = 8
 plate_seed = 12345
 mountain_height = 1.0
-ocean_depth = 0.3
+ocean_depth = 0.08
 polar_flatness = 0.7
 polar_extent = 0.3
 continental_roughness = 0.3
@@ -61,7 +61,7 @@ city_flatten_strength = 0.9
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
 planet_radius = 100.0
-water_level = 2.0
+water_level = -0.5
 subdivisions = 4
 wave_speed = 0.5
 wave_scale = 1.0
@@ -88,11 +88,11 @@ planet_radius = 100.0
 spawn_height = 130.0
 walk_speed = 50.0
 sprint_speed = 100.0
-jump_velocity = 250.0
+jump_velocity = 50.0
 swim_speed = 30.0
-gravity_strength = 2.0
+gravity_strength = 20.0
 air_control = 2.5
-water_level = -8.0
+water_level = -0.5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 shape = SubResource("CapsuleShape3D_1")

@@ -11,9 +11,9 @@ class_name PlayerCharacter
 @export_group("Movement")
 @export var walk_speed: float = 50.0
 @export var sprint_speed: float = 100.0
-@export var jump_velocity: float = 250.0
+@export var jump_velocity: float = 50.0
 @export var swim_speed: float = 30.0
-@export var gravity_strength: float = 2.0
+@export var gravity_strength: float = 20.0
 @export var air_control: float = 2.5
 
 @export_group("Mouse Look")
@@ -21,7 +21,7 @@ class_name PlayerCharacter
 @export var vertical_look_limit: float = 89.0
 
 @export_group("Water")
-@export var water_level: float = -8.0  # Height relative to base terrain
+@export var water_level: float = -0.5  # Height relative to base terrain
 
 var camera: Camera3D
 var camera_pivot: Node3D

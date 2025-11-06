@@ -19,7 +19,7 @@ class_name PlanetTerrain
 @export var num_plates: int = 8
 @export var plate_seed: int = 12345
 @export var mountain_height: float = 1.0  # Mountains at plate boundaries
-@export var ocean_depth: float = 0.3  # Oceanic vs continental plates
+@export var ocean_depth: float = 0.08  # Oceanic vs continental plates
 
 @export_group("Polar Regions")
 @export var polar_flatness: float = 0.7  # How flat poles are (0-1)
