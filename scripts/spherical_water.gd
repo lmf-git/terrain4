@@ -4,9 +4,9 @@ class_name SphericalWater
 ## Spherical water system for planet
 ## Creates ocean shell around planet
 
-@export var planet_radius: float = 100.0
-@export var water_level: float = -0.2  # Height above planet surface
-@export var subdivisions: int = 4  # Sphere subdivisions for water mesh
+@export var planet_radius: float = 500.0
+@export var water_level: float = -1.0  # Height above planet surface
+@export var subdivisions: int = 5  # Sphere subdivisions for water mesh
 
 @export_group("Wave Properties")
 @export var wave_speed: float = 0.5

@@ -4,10 +4,10 @@ class_name Atmosphere
 ## Atmospheric scattering effect for planet
 ## Creates atmospheric halo around planet
 
-@export var planet_radius: float = 100.0
-@export var atmosphere_radius: float = 110.0
-@export var atmosphere_color: Color = Color(0.4, 0.65, 1.0, 1.0)
-@export var atmosphere_density: float = 0.15
+@export var planet_radius: float = 500.0
+@export var atmosphere_radius: float = 550.0
+@export var atmosphere_color: Color = Color(0.35, 0.6, 1.0, 1.0)
+@export var atmosphere_density: float = 0.2
 
 func _ready() -> void:
 	create_atmosphere()

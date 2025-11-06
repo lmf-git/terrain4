@@ -1,10 +1,10 @@
 shader_type spatial;
 render_mode blend_add, depth_draw_always, cull_back, unshaded;
 
-uniform float planet_radius = 100.0;
-uniform float atmosphere_radius = 110.0;
-uniform vec4 atmosphere_color : source_color = vec4(0.4, 0.65, 1.0, 1.0);
-uniform float density = 0.12;
+uniform float planet_radius = 500.0;
+uniform float atmosphere_radius = 550.0;
+uniform vec4 atmosphere_color : source_color = vec4(0.3, 0.55, 0.95, 1.0);
+uniform float density = 0.16;
 
 void vertex() {
 	// No vertex modifications needed

@@ -37,17 +37,17 @@ script = ExtResource("6")
 
 [node name="PlanetTerrain" type="Node3D" parent="Planet"]
 script = ExtResource("1")
-planet_radius = 100.0
-terrain_height = 15.0
-subdivisions = 6
+planet_radius = 500.0
+terrain_height = 40.0
+subdivisions = 7
 enable_tectonic_plates = true
 enable_cities = true
 enable_caves = true
 enable_advanced_shader = true
-num_plates = 8
+num_plates = 12
 plate_seed = 12345
-mountain_height = 1.5
-ocean_depth = 0.02
+mountain_height = 2.0
+ocean_depth = 0.015
 polar_flatness = 0.7
 polar_extent = 0.3
 continental_roughness = 0.3
@@ -60,40 +60,40 @@ city_flatten_strength = 0.9
 
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
-planet_radius = 100.0
-water_level = -0.2
-subdivisions = 4
+planet_radius = 500.0
+water_level = -1.0
+subdivisions = 5
 wave_speed = 0.3
 wave_scale = 0.5
 wave_height = 0.05
 
 [node name="Atmosphere" type="MeshInstance3D" parent="Planet"]
 script = ExtResource("4")
-planet_radius = 100.0
-atmosphere_radius = 110.0
-atmosphere_color = Color(0.4, 0.65, 1, 1)
-atmosphere_density = 0.15
+planet_radius = 500.0
+atmosphere_radius = 550.0
+atmosphere_color = Color(0.35, 0.6, 1, 1)
+atmosphere_density = 0.2
 
 [node name="OrbitalCamera" type="Node3D" parent="."]
 script = ExtResource("3")
 target = NodePath("../Planet")
-distance = 350.0
-min_distance = 50.0
-max_distance = 2000.0
+distance = 1750.0
+min_distance = 250.0
+max_distance = 10000.0
 rotation_speed = 0.3
 zoom_speed = 20.0
 
 [node name="Player" type="CharacterBody3D" parent="."]
 script = ExtResource("5")
-planet_radius = 100.0
-spawn_height = 130.0
-walk_speed = 50.0
-sprint_speed = 100.0
-jump_velocity = 50.0
-swim_speed = 30.0
+planet_radius = 500.0
+spawn_height = 650.0
+walk_speed = 100.0
+sprint_speed = 200.0
+jump_velocity = 80.0
+swim_speed = 60.0
 gravity_strength = 20.0
 air_control = 2.5
-water_level = -0.2
+water_level = -1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 shape = SubResource("CapsuleShape3D_1")

@@ -5,14 +5,14 @@ class_name PlayerCharacter
 ## Uses gravity aligned to planet center
 
 @export var planet_center: Vector3 = Vector3.ZERO
-@export var planet_radius: float = 100.0
-@export var spawn_height: float = 130.0  # Spawn well above terrain (max terrain ~120)
+@export var planet_radius: float = 500.0
+@export var spawn_height: float = 650.0  # Spawn well above terrain
 
 @export_group("Movement")
-@export var walk_speed: float = 50.0
-@export var sprint_speed: float = 100.0
-@export var jump_velocity: float = 50.0
-@export var swim_speed: float = 30.0
+@export var walk_speed: float = 100.0
+@export var sprint_speed: float = 200.0
+@export var jump_velocity: float = 80.0
+@export var swim_speed: float = 60.0
 @export var gravity_strength: float = 20.0
 @export var air_control: float = 2.5
 
@@ -21,7 +21,7 @@ class_name PlayerCharacter
 @export var vertical_look_limit: float = 89.0
 
 @export_group("Water")
-@export var water_level: float = -0.2  # Height relative to base terrain
+@export var water_level: float = -1.0  # Height relative to base terrain
 
 var camera: Camera3D
 var camera_pivot: Node3D

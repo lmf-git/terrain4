@@ -5,9 +5,9 @@ class_name PlanetTerrain
 ## Combines simple noise, tectonic plates, cities, caves, and advanced shaders
 
 @export_group("Planet Properties")
-@export var planet_radius: float = 100.0
-@export var terrain_height: float = 15.0
-@export var subdivisions: int = 6  # Mesh detail level
+@export var planet_radius: float = 500.0  # Larger planet for better scale
+@export var terrain_height: float = 40.0  # Increased height variation
+@export var subdivisions: int = 7  # More detail for larger planet
 
 @export_group("Feature Toggles")
 @export var enable_tectonic_plates: bool = true
@@ -16,10 +16,10 @@ class_name PlanetTerrain
 @export var enable_advanced_shader: bool = true
 
 @export_group("Tectonic Plates")
-@export var num_plates: int = 8
+@export var num_plates: int = 12  # More plates for variety
 @export var plate_seed: int = 12345
-@export var mountain_height: float = 1.5  # Mountains at plate boundaries
-@export var ocean_depth: float = 0.02  # Oceanic vs continental plates
+@export var mountain_height: float = 2.0  # Taller mountains
+@export var ocean_depth: float = 0.015  # Shallower oceans
 
 @export_group("Polar Regions")
 @export var polar_flatness: float = 0.7  # How flat poles are (0-1)
@@ -225,63 +225,95 @@ func get_tectonic_height(normal: Vector3) -> float:
 	# Find nearest plate and distance to plate boundaries
 	var nearest_plate_dist = 999999.0
 	var second_nearest_dist = 999999.0
+	var third_nearest_dist = 999999.0
 	var plate_type = 0.5
+	var nearest_plate_idx = 0
 
 	for i in range(plate_centers.size()):
 		var dist = normal.distance_to(plate_centers[i])
 		if dist < nearest_plate_dist:
+			third_nearest_dist = second_nearest_dist
 			second_nearest_dist = nearest_plate_dist
 			nearest_plate_dist = dist
 			plate_type = plate_types[i]
+			nearest_plate_idx = i
 		elif dist < second_nearest_dist:
+			third_nearest_dist = second_nearest_dist
 			second_nearest_dist = dist
+		elif dist < third_nearest_dist:
+			third_nearest_dist = dist
 
-	# Plate boundary detection (where two plates meet)
+	# Improved plate boundary detection with smoother transitions
 	var boundary_strength = abs(nearest_plate_dist - second_nearest_dist)
-	boundary_strength = 1.0 - clamp(boundary_strength * 10.0, 0.0, 1.0)
+	boundary_strength = 1.0 - smoothstep(0.0, 0.15, boundary_strength)
 
-	# Base height from plate type
+	# Plate center influence (for plateau formation)
+	var plate_center_dist = nearest_plate_dist
+	var plateau_factor = 1.0 - smoothstep(0.3, 0.8, plate_center_dist)
+
+	# Base height from plate type with more variation
 	var base_height = 0.0
 	if plate_type > 0.5:
-		# Continental plate - above sea level
-		base_height = 0.25
+		# Continental plate - varied elevation
+		base_height = lerp(0.18, 0.32, plate_type)  # 0.18-0.32 range
+		# Plateaus at plate centers
+		base_height += plateau_factor * 0.15
 	else:
-		# Oceanic plate - below sea level
-		base_height = -ocean_depth
+		# Oceanic plate - varied depth
+		base_height = -ocean_depth * lerp(0.8, 1.2, plate_type)
 
-	# Mountains at plate boundaries - barely visible, just subtle ridges
-	var boundary_mountain = boundary_strength * mountain_height * 0.05
+	# Mountains at plate boundaries - subtle but visible
+	var boundary_mountain = boundary_strength * mountain_height * 0.12
 
-	# Add proper mountain ranges across continents using multi-octave noise
+	# Enhanced layered noise for realistic continental features
 	var mountain_noise = 0.0
+	var continental_features = 0.0
+
 	if plate_type > 0.5:  # Only on continental plates
-		# Large-scale mountain ranges - MUCH STRONGER
-		var mountain_base = noise.get_noise_3d(normal.x * 2, normal.y * 2, normal.z * 2)
-		mountain_base = abs(mountain_base)  # Ridge-like mountains
-		mountain_base = pow(mountain_base, 1.8)  # Sharper, taller peaks
+		# Layer 1: Large-scale mountain ranges
+		var mountain_base = noise.get_noise_3d(normal.x * 1.5, normal.y * 1.5, normal.z * 1.5)
+		mountain_base = abs(mountain_base)  # Ridge-like
+		mountain_base = pow(mountain_base, 2.0) * 1.2  # Sharp peaks
 
-		# Medium-scale hills
-		var hills = noise.get_noise_3d(normal.x * 4, normal.y * 4, normal.z * 4) * 0.6
+		# Layer 2: Medium mountain chains
+		var mountain_chains = noise.get_noise_3d(normal.x * 2.5, normal.y * 2.5, normal.z * 2.5)
+		mountain_chains = abs(mountain_chains)
+		mountain_chains = pow(mountain_chains, 1.6) * 0.8
 
-		# Additional large mountain features
-		var large_mountains = noise.get_noise_3d(normal.x * 1.5, normal.y * 1.5, normal.z * 1.5)
-		large_mountains = abs(large_mountains) * 0.8
+		# Layer 3: Rolling hills
+		var hills = noise.get_noise_3d(normal.x * 4, normal.y * 4, normal.z * 4)
+		hills = (hills + 1.0) * 0.5  # 0-1 range
+		hills = pow(hills, 1.2) * 0.5
 
-		# Small-scale detail
-		var detail = noise.get_noise_3d(normal.x * 8, normal.y * 8, normal.z * 8) * 0.3
+		# Layer 4: Valleys (inverted ridges)
+		var valleys = noise.get_noise_3d(normal.x * 3, normal.y * 3, normal.z * 3)
+		valleys = abs(valleys)
+		valleys = (1.0 - valleys) * 0.3  # Inverted for valleys
 
-		mountain_noise = (mountain_base + hills + large_mountains + detail) * mountain_height * 2.5
+		# Layer 5: Fine detail
+		var detail = noise.get_noise_3d(normal.x * 8, normal.y * 8, normal.z * 8) * 0.25
+
+		mountain_noise = (mountain_base + mountain_chains + hills - valleys + detail) * mountain_height * 2.8
+
+		# Continental shelf features
+		var shelf_noise = noise.get_noise_3d(normal.x * 6, normal.y * 6, normal.z * 6) * 0.15
+		continental_features = shelf_noise
+	else:
+		# Oceanic features - smoother but with ridges
+		var ocean_ridge = noise.get_noise_3d(normal.x * 2, normal.y * 2, normal.z * 2)
+		ocean_ridge = abs(ocean_ridge) * 0.1
+		continental_features = ocean_ridge
 
 	# Add smooth terrain variation
 	var terrain_detail = noise.get_noise_3d(normal.x * 5, normal.y * 5, normal.z * 5)
 
 	# Apply different roughness based on plate type
 	if plate_type > 0.5:
-		# Continental - some roughness
-		terrain_detail *= continental_roughness * 0.5
+		# Continental - moderate roughness
+		terrain_detail *= continental_roughness * 0.6
 	else:
 		# Oceanic - very smooth
-		terrain_detail *= (1.0 - oceanic_smoothness) * 0.2
+		terrain_detail *= (1.0 - oceanic_smoothness) * 0.15
 
 	# Polar flattening
 	var polar_factor = abs(latitude)
@@ -294,9 +326,10 @@ func get_tectonic_height(normal: Vector3) -> float:
 		boundary_mountain *= (1.0 - polar_blend * 0.7)
 		mountain_noise *= (1.0 - polar_blend * 0.8)
 		terrain_detail *= (1.0 - polar_blend * 0.8)
+		continental_features *= (1.0 - polar_blend * 0.9)
 
-	# Combine all height factors
-	var total_height = (base_height + boundary_mountain + mountain_noise + terrain_detail) * terrain_height
+	# Combine all height factors with improved layering
+	var total_height = (base_height + boundary_mountain + mountain_noise + continental_features + terrain_detail) * terrain_height
 
 	# Apply erosion (smoothing)
 	total_height *= (1.0 - erosion_amount * 0.3)
