@@ -24,6 +24,12 @@ class_name TectonicTerrain
 @export var oceanic_smoothness: float = 0.9  # Very smooth oceans
 @export var erosion_amount: float = 0.5  # Smoothing factor
 
+@export_group("Cities and Caves")
+@export var num_cities: int = 5
+@export var num_caves: int = 10
+@export var city_flatten_radius: float = 15.0
+@export var city_flatten_strength: float = 0.9
+
 var noise: FastNoiseLite
 var plate_noise: FastNoiseLite
 var terrain_material: StandardMaterial3D
@@ -33,11 +39,18 @@ var terrain_meshes: Array[MeshInstance3D] = []
 var plate_centers: Array[Vector3] = []
 var plate_types: Array[float] = []  # 0 = oceanic, 1 = continental
 
+# City and cave data
+var city_locations: Array[Vector3] = []
+var city_heights: Array[float] = []
+var cave_locations: Array[Vector3] = []
+
 func _ready() -> void:
 	setup_noise()
 	setup_plates()
+	generate_city_and_cave_locations()
 	setup_material()
 	generate_terrain()
+	generate_cities_and_caves()
 
 func setup_noise() -> void:
 	# Main terrain noise - smooth
@@ -76,12 +89,73 @@ func setup_plates() -> void:
 		# Random plate type (oceanic or continental)
 		plate_types.append(rng.randf())
 
+func generate_city_and_cave_locations() -> void:
+	var rng = RandomNumberGenerator.new()
+	rng.seed = plate_seed + 5000
+
+	# Generate city locations on continental plates (above water)
+	for i in range(num_cities):
+		var theta = rng.randf_range(0, TAU)
+		var phi = rng.randf_range(-PI/2, PI/2)
+
+		var x = cos(phi) * cos(theta)
+		var y = sin(phi)
+		var z = cos(phi) * sin(theta)
+
+		var city_normal = Vector3(x, y, z).normalized()
+
+		# Calculate base terrain height at this location
+		var base_height = get_base_terrain_height(city_normal)
+
+		# Only place cities on land (continental plates above water)
+		if base_height > 0.0:
+			city_locations.append(city_normal)
+			city_heights.append(base_height)
+
+	# Generate cave locations
+	for i in range(num_caves):
+		var theta = rng.randf_range(0, TAU)
+		var phi = rng.randf_range(-PI/2, PI/2)
+
+		var x = cos(phi) * cos(theta)
+		var y = sin(phi)
+		var z = cos(phi) * sin(theta)
+
+		var cave_normal = Vector3(x, y, z).normalized()
+		cave_locations.append(cave_normal)
+
+func get_base_terrain_height(normal: Vector3) -> float:
+	# Quick version of get_terrain_height for city placement
+	var nearest_plate_dist = 999999.0
+	var plate_type = 0.5
+
+	for i in range(plate_centers.size()):
+		var dist = normal.distance_to(plate_centers[i])
+		if dist < nearest_plate_dist:
+			nearest_plate_dist = dist
+			plate_type = plate_types[i]
+
+	# Continental vs oceanic
+	if plate_type > 0.5:
+		return 0.2 * terrain_height  # Continental
+	else:
+		return -ocean_depth * terrain_height  # Oceanic
+
 func setup_material() -> void:
-	terrain_material = StandardMaterial3D.new()
-	terrain_material.albedo_color = Color(0.45, 0.4, 0.3)
-	terrain_material.roughness = 0.9
-	terrain_material.metallic = 0.0
-	terrain_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	# Use advanced triplanar shader with procedural textures
+	var shader = load("res://shaders/terrain_triplanar.gdshader")
+	if shader:
+		terrain_material = ShaderMaterial.new()
+		terrain_material.shader = shader
+		# Set water level parameter to match terrain generation
+		terrain_material.set_shader_parameter("water_level", -ocean_depth * terrain_height)
+	else:
+		# Fallback to simple material
+		terrain_material = StandardMaterial3D.new()
+		terrain_material.albedo_color = Color(0.45, 0.4, 0.3)
+		terrain_material.roughness = 0.9
+		terrain_material.metallic = 0.0
+		terrain_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 
 func generate_terrain() -> void:
 	var vertices: PackedVector3Array = []
@@ -162,6 +236,24 @@ func get_terrain_height(normal: Vector3) -> float:
 
 	# Apply erosion (smoothing)
 	total_height *= (1.0 - erosion_amount * 0.3)
+
+	# City flattening - flatten terrain around cities
+	for i in range(city_locations.size()):
+		var city_center = city_locations[i]
+		var city_height = city_heights[i]
+
+		# Calculate distance on sphere surface
+		var arc_distance = acos(clamp(normal.dot(city_center), -1.0, 1.0))
+		var linear_distance = arc_distance * planet_radius
+
+		if linear_distance < city_flatten_radius:
+			# Smooth falloff from city center
+			var flatten_amount = 1.0 - (linear_distance / city_flatten_radius)
+			flatten_amount = smoothstep(0.0, 1.0, flatten_amount)
+			flatten_amount *= city_flatten_strength
+
+			# Blend toward flat city platform
+			total_height = lerp(total_height, city_height, flatten_amount)
 
 	return total_height
 
@@ -274,3 +366,97 @@ func create_mesh_from_data(vertices: PackedVector3Array, indices: PackedInt32Arr
 
 	# Add collision immediately after adding to scene tree
 	mesh_instance.create_trimesh_collision()
+
+func generate_cities_and_caves() -> void:
+	var rng = RandomNumberGenerator.new()
+	rng.seed = plate_seed + 6000
+
+	# Generate cities with buildings
+	for i in range(city_locations.size()):
+		var city_center = city_locations[i]
+		var city_height = city_heights[i]
+		var city_pos = city_center * (planet_radius + city_height)
+
+		var city_node = Node3D.new()
+		city_node.name = "City_" + str(i)
+		city_node.global_position = city_pos
+		add_child(city_node)
+
+		# Generate 5-15 buildings per city
+		var num_buildings = rng.randi_range(5, 15)
+		for j in range(num_buildings):
+			create_building(city_node, city_center, city_pos, city_height, rng)
+
+	# Generate cave entrance markers
+	for i in range(cave_locations.size()):
+		var cave_normal = cave_locations[i]
+		var cave_height = get_terrain_height(cave_normal)
+		var cave_pos = cave_normal * (planet_radius + cave_height)
+
+		# Create cave entrance marker (small dark cube)
+		var cave_mesh = MeshInstance3D.new()
+		var box_mesh = BoxMesh.new()
+		box_mesh.size = Vector3(2.0, 2.0, 2.0)
+		cave_mesh.mesh = box_mesh
+
+		var cave_mat = StandardMaterial3D.new()
+		cave_mat.albedo_color = Color(0.1, 0.05, 0.0)  # Dark brown
+		cave_mesh.material_override = cave_mat
+
+		cave_mesh.name = "Cave_" + str(i)
+		cave_mesh.global_position = cave_pos
+
+		# Orient toward planet surface
+		cave_mesh.look_at(global_position, cave_normal)
+
+		add_child(cave_mesh)
+
+func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vector3, city_height: float, rng: RandomNumberGenerator) -> void:
+	# Random building size
+	var width = rng.randf_range(4.0, 12.0)
+	var depth = rng.randf_range(4.0, 12.0)
+	var height = rng.randf_range(10.0, 40.0)
+
+	# Random offset from city center (within city platform)
+	var offset_distance = rng.randf_range(0.0, city_flatten_radius * 0.7)
+	var offset_angle = rng.randf_range(0, TAU)
+
+	# Calculate tangent space for city
+	var up = city_normal
+	var right = Vector3.UP.cross(up)
+	if right.length_squared() < 0.01:
+		right = Vector3.RIGHT.cross(up)
+	right = right.normalized()
+	var forward = up.cross(right).normalized()
+
+	# Position building with offset
+	var offset = (right * cos(offset_angle) + forward * sin(offset_angle)) * offset_distance
+	var building_pos = city_center * (planet_radius + city_height + height / 2.0) + offset
+
+	# Create building mesh
+	var building = MeshInstance3D.new()
+	var box_mesh = BoxMesh.new()
+	box_mesh.size = Vector3(width, height, depth)
+	building.mesh = box_mesh
+
+	# Random building color (grayish)
+	var building_mat = StandardMaterial3D.new()
+	var color_variation = rng.randf_range(0.3, 0.6)
+	building_mat.albedo_color = Color(color_variation, color_variation, color_variation)
+	building_mat.metallic = 0.2
+	building_mat.roughness = 0.7
+	building.material_override = building_mat
+
+	building.global_position = building_pos
+
+	# Orient building to point up from planet surface
+	var building_transform = building.global_transform
+	building_transform.basis.y = city_normal
+	building_transform.basis.x = right
+	building_transform.basis.z = forward
+	building.global_transform = building_transform
+
+	city_node.add_child(building)
+
+	# Add collision to building
+	building.create_trimesh_collision()

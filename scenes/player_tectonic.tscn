@@ -46,6 +46,10 @@ polar_extent = 0.3
 continental_roughness = 0.3
 oceanic_smoothness = 0.9
 erosion_amount = 0.5
+num_cities = 5
+num_caves = 10
+city_flatten_radius = 15.0
+city_flatten_strength = 0.9
 
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
@@ -66,10 +70,13 @@ atmosphere_density = 0.5
 script = ExtResource("4")
 planet_radius = 100.0
 spawn_height = 130.0
-walk_speed = 5.0
-sprint_speed = 10.0
-jump_velocity = 6.0
-gravity_strength = 15.0
+walk_speed = 50.0
+sprint_speed = 100.0
+jump_velocity = 250.0
+swim_speed = 30.0
+gravity_strength = 2.0
+air_control = 2.5
+water_level = -8.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 shape = SubResource("CapsuleShape3D_1")
@@ -85,11 +92,15 @@ environment = SubResource("Environment_1")
 
 [node name="DebugLabel" type="Label" parent="."]
 offset_right = 500.0
-offset_bottom = 120.0
-text = "TECTONIC TERRAIN (Player Mode)
+offset_bottom = 180.0
+text = "TECTONIC TERRAIN (Player Mode Y)
 • Walk on realistic terrain
-• Explore mountains and valleys
-• Polar regions"
+• Swimming mechanics (Space to swim up)
+• Explore cities with buildings
+• Find cave entrances
+• O key - Toggle first/third person
+• Shift - Sprint
+• Advanced triplanar textures"
 metadata/_edit_use_anchors_ = true
 
 [editable path="Planet"]

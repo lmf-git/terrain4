@@ -28,12 +28,26 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
   - Oceanic plates: Below sea level, very smooth ocean floors
 - **Polar Regions**: Flattened terrain at north and south poles
 - **Smooth Transitions**: Realistic erosion and terrain smoothing
+- **Procedural Cities**: 5 cities per planet with 5-15 buildings each
+  - Buildings with random sizes, heights, and colors
+  - Flattened terrain platforms for city placement
+  - Collision-enabled buildings
+  - Only placed on continental land masses
+- **Cave Entrance Markers**: 10 procedurally placed cave markers
+- **Advanced Triplanar Shader**: Seamless procedural textures
+  - FBM noise-based texture generation
+  - Biome-specific textures (water, sand, grass, rock, snow)
+  - Smooth biome transitions
+  - Detail noise for realistic surfaces
 - **Configurable Parameters**:
   - Number of plates (default: 8)
+  - Number of cities (default: 5)
+  - Number of caves (default: 10)
   - Mountain height at boundaries
   - Ocean depth
   - Polar flatness and extent
   - Continental roughness vs oceanic smoothness
+  - City flatten radius and strength
 
 ### ⚡ Advanced LOD System (NEW)
 - **Frustum Culling**: Only renders terrain chunks visible to the camera
@@ -75,13 +89,24 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 - **Smooth interpolated movement**
 - **Configurable distances and speeds**
 
-### 🚶 First-Person Player Mode
+### 🚶 Enhanced Player Mode (NEW)
 - **Spherical gravity system** aligned to planet center
 - **WASD movement** with Sprint (Shift key)
+- **Swimming mechanics** with buoyancy
+  - Automatic detection when underwater
+  - Free 3D movement while swimming
+  - Swim upward with Space key
+  - Water drag for realistic swimming
 - **Mouse look** with captured cursor
 - **Jump mechanics** working with planetary gravity
 - **Character auto-aligns** to planet surface
+- **Third-person camera toggle** (O key)
+  - Visible magenta player capsule in third person
+  - Adjustable third-person distance
+- **Enhanced air control** for orbital movement
+- **Powerful movement** with realistic physics
 - Walk on any part of the spherical terrain
+- Explore cities and find cave entrances
 
 ### 🌅 Atmospheric Effects
 - **Atmospheric scattering shader** creates blue halo around planet
@@ -114,7 +139,8 @@ terrain4/
 │   └── scene_selector.gd      # Mode launcher UI
 ├── shaders/
 │   ├── water.gdshader         # Water shader with waves
-│   └── atmosphere.gdshader    # Atmospheric scattering
+│   ├── atmosphere.gdshader    # Atmospheric scattering
+│   └── terrain_triplanar.gdshader  # Advanced triplanar terrain shader
 └── project.godot              # Godot project configuration
 ```
 
@@ -156,6 +182,20 @@ Edit in `TectonicTerrain` node:
 - **continental_roughness**: Roughness of continents (default: 0.3)
 - **oceanic_smoothness**: Smoothness of oceans (default: 0.9)
 - **erosion_amount**: Overall terrain smoothing (default: 0.5)
+- **num_cities**: Number of procedural cities (default: 5)
+- **num_caves**: Number of cave entrance markers (default: 10)
+- **city_flatten_radius**: Radius of flattened city platforms (default: 15.0)
+- **city_flatten_strength**: How flat city terrain is, 0-1 (default: 0.9)
+
+### Player Settings (Player Scenes Only)
+Edit in `Player` node:
+- **walk_speed**: Walking speed (default: 50.0)
+- **sprint_speed**: Sprinting speed (default: 100.0)
+- **jump_velocity**: Jump force (default: 250.0)
+- **swim_speed**: Swimming speed (default: 30.0)
+- **gravity_strength**: Gravity pull strength (default: 2.0)
+- **air_control**: Movement control while airborne (default: 2.5)
+- **water_level**: Height threshold for swimming (default: -8.0)
 
 ### LOD System Settings (LOD Scenes Only)
 Edit in `SphericalTerrainLOD` node:
@@ -191,8 +231,11 @@ Edit in `SphericalTerrainLOD` node:
 ### Player Mode
 - **WASD**: Move (forward/left/back/right)
 - **Shift**: Sprint
-- **Space**: Jump
+- **Space**: Jump (or swim upward when underwater)
+- **O**: Toggle first-person/third-person camera
 - **Mouse**: Look around (cursor is captured)
+  - Free camera rotation when swimming or airborne
+  - Grounded: Mouse look only (body follows movement)
 - **ESC**: Release cursor (press again to quit)
 
 ## Technical Details
