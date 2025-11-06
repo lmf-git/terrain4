@@ -449,12 +449,13 @@ func generate_cities_and_caves() -> void:
 			cave_mesh.material_override = cave_mat
 
 			cave_mesh.name = "Cave_" + str(i)
-			cave_mesh.global_position = cave_pos
 
-			# Orient toward planet surface
-			cave_mesh.look_at(global_position, cave_normal)
-
+			# Add to tree first
 			add_child(cave_mesh)
+
+			# Then set position and orientation
+			cave_mesh.global_position = cave_pos
+			cave_mesh.look_at(global_position, cave_normal)
 
 func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vector3, city_height: float, rng: RandomNumberGenerator) -> void:
 	# Random building size
@@ -492,6 +493,10 @@ func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vecto
 	building_mat.roughness = 0.7
 	building.material_override = building_mat
 
+	# Add to tree first
+	city_node.add_child(building)
+
+	# Then set position and orientation
 	building.global_position = building_pos
 
 	# Orient building to point up from planet surface
@@ -500,8 +505,6 @@ func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vecto
 	building_transform.basis.x = right
 	building_transform.basis.z = forward
 	building.global_transform = building_transform
-
-	city_node.add_child(building)
 
 	# Add collision to building
 	building.create_trimesh_collision()
