@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://main_scene"]
 
-[ext_resource type="Script" path="res://scripts/spherical_terrain.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/planet_terrain.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/spherical_water.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/orbital_camera.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/atmosphere.gd" id="4"]
@@ -28,16 +28,28 @@ volumetric_fog_albedo = Color(0.5, 0.6, 0.8, 1)
 
 [node name="Planet" type="Node3D" parent="."]
 
-[node name="SphericalTerrain" type="Node3D" parent="Planet"]
+[node name="PlanetTerrain" type="Node3D" parent="Planet"]
 script = ExtResource("1")
 planet_radius = 100.0
-terrain_height = 10.0
-subdivisions = 5
-noise_scale = 0.5
-noise_octaves = 6
-noise_persistence = 0.5
-noise_lacunarity = 2.0
-seed_value = 12345
+terrain_height = 15.0
+subdivisions = 6
+enable_tectonic_plates = true
+enable_cities = true
+enable_caves = true
+enable_advanced_shader = true
+num_plates = 8
+plate_seed = 12345
+mountain_height = 1.0
+ocean_depth = 0.3
+polar_flatness = 0.7
+polar_extent = 0.3
+continental_roughness = 0.3
+oceanic_smoothness = 0.9
+erosion_amount = 0.5
+num_cities = 5
+num_caves = 10
+city_flatten_radius = 15.0
+city_flatten_strength = 0.9
 
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
@@ -71,5 +83,18 @@ shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
+
+[node name="DebugLabel" type="Label" parent="."]
+offset_right = 500.0
+offset_bottom = 180.0
+text = "ORBITAL VIEW MODE (Press O)
+• Tectonic plates with mountains and oceans
+• Procedural cities with buildings
+• Cave entrance markers
+• Advanced triplanar shader
+• Polar regions
+• Right-click drag to rotate
+• Scroll to zoom"
+metadata/_edit_use_anchors_ = true
 
 [editable path="Planet"]
