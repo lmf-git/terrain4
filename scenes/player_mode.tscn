@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://player_mode_scene"]
 
-[ext_resource type="Script" path="res://scripts/spherical_terrain.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/planet_terrain.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/spherical_water.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/atmosphere.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/player_character.gd" id="4"]
@@ -32,16 +32,28 @@ volumetric_fog_albedo = Color(0.5, 0.6, 0.8, 1)
 
 [node name="Planet" type="Node3D" parent="."]
 
-[node name="SphericalTerrain" type="Node3D" parent="Planet"]
+[node name="PlanetTerrain" type="Node3D" parent="Planet"]
 script = ExtResource("1")
 planet_radius = 100.0
-terrain_height = 10.0
-subdivisions = 5
-noise_scale = 0.5
-noise_octaves = 6
-noise_persistence = 0.5
-noise_lacunarity = 2.0
-seed_value = 12345
+terrain_height = 15.0
+subdivisions = 6
+enable_tectonic_plates = true
+enable_cities = true
+enable_caves = true
+enable_advanced_shader = true
+num_plates = 8
+plate_seed = 12345
+mountain_height = 1.0
+ocean_depth = 0.3
+polar_flatness = 0.7
+polar_extent = 0.3
+continental_roughness = 0.3
+oceanic_smoothness = 0.9
+erosion_amount = 0.5
+num_cities = 5
+num_caves = 10
+city_flatten_radius = 15.0
+city_flatten_strength = 0.9
 
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
@@ -62,10 +74,13 @@ atmosphere_density = 0.5
 script = ExtResource("4")
 planet_radius = 100.0
 spawn_height = 130.0
-walk_speed = 5.0
-sprint_speed = 10.0
-jump_velocity = 6.0
-gravity_strength = 15.0
+walk_speed = 50.0
+sprint_speed = 100.0
+jump_velocity = 250.0
+swim_speed = 30.0
+gravity_strength = 2.0
+air_control = 2.5
+water_level = -8.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 shape = SubResource("CapsuleShape3D_1")
@@ -78,5 +93,19 @@ shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
+
+[node name="DebugLabel" type="Label" parent="."]
+offset_right = 500.0
+offset_bottom = 200.0
+text = "PLAYER MODE (Press P)
+• Tectonic terrain with cities and caves
+• Swimming mechanics (Space to swim up)
+• O key - Toggle first/third person
+• Shift - Sprint
+• WASD - Move
+• Advanced triplanar shader
+• Find and explore cities
+• Discover cave entrances"
+metadata/_edit_use_anchors_ = true
 
 [editable path="Planet"]

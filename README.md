@@ -2,21 +2,22 @@
 
 A complete spherical planetary terrain system with water for Godot 4.5, inspired by games like ARMA 3 and Kerbal Space Program.
 
-## Six View Modes
+## Single Unified Experience
 
-**When you run the project, you'll see a launcher with six options:**
+**The project starts directly in the game - no launcher needed!**
 
-**Basic Modes (Smooth Terrain):**
-- Press **O** for Orbital Camera mode (smooth simple terrain)
-- Press **P** for Player Mode (smooth simple terrain)
+- Press **V** to toggle between Orbital and Player views at any time
+- Switch seamlessly between perspectives during gameplay
 
-**Tectonic Terrain (NEW - Realistic Geology):**
-- Press **T** for Orbital Camera with tectonic plates
-- Press **Y** for Player Mode with tectonic plates
-
-**Optimized Modes (LOD System):**
-- Press **L** for Orbital Camera with LOD optimizations
-- Press **K** for Player Mode with LOD optimizations
+**All features included:**
+- Tectonic plates with realistic geology
+- Procedural cities with buildings
+- Cave entrance markers
+- Advanced triplanar shader with biomes
+- Swimming mechanics with buoyancy
+- Polar regions
+- First/third person toggle in player mode
+- All features are configurable via export parameters
 
 ## Features
 
@@ -89,7 +90,7 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 - **Smooth interpolated movement**
 - **Configurable distances and speeds**
 
-### 🚶 Enhanced Player Mode (NEW)
+### 🚶 Enhanced Player System
 - **Spherical gravity system** aligned to planet center
 - **WASD movement** with Sprint (Shift key)
 - **Swimming mechanics** with buoyancy
@@ -120,23 +121,14 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 ```
 terrain4/
 ├── scenes/
-│   ├── launcher.tscn          # Mode selection launcher
-│   ├── main.tscn              # Orbital camera (smooth basic)
-│   ├── player_mode.tscn       # Player mode (smooth basic)
-│   ├── main_tectonic.tscn     # Orbital (tectonic plates)
-│   ├── player_tectonic.tscn   # Player (tectonic plates)
-│   ├── main_lod.tscn          # Orbital with LOD optimization
-│   └── player_mode_lod.tscn   # Player with LOD optimization
+│   └── main.tscn              # Main game scene (unified)
 ├── scripts/
-│   ├── spherical_terrain.gd   # Basic smooth terrain
-│   ├── tectonic_terrain.gd    # Tectonic plate terrain
-│   ├── spherical_terrain_lod.gd  # LOD terrain system
-│   ├── terrain_chunk.gd       # Individual terrain chunk
+│   ├── planet_terrain.gd      # Unified terrain system (all features)
 │   ├── spherical_water.gd     # Water system controller
 │   ├── orbital_camera.gd      # Orbital camera controller
-│   ├── player_character.gd    # First-person player controller
+│   ├── player_character.gd    # Enhanced player controller
 │   ├── atmosphere.gd          # Atmosphere renderer
-│   └── scene_selector.gd      # Mode launcher UI
+│   └── view_switcher.gd       # Handles view mode switching
 ├── shaders/
 │   ├── water.gdshader         # Water shader with waves
 │   ├── atmosphere.gdshader    # Atmospheric scattering
@@ -146,14 +138,19 @@ terrain4/
 
 ## Configuration
 
-### Terrain Settings
-Edit in `SphericalTerrain` node:
+### Unified Terrain Settings
+Edit in `PlanetTerrain` node:
+
+**Planet Properties:**
 - **planet_radius**: Base radius of planet (default: 100.0)
-- **terrain_height**: Maximum height variation (default: 10.0)
-- **subdivisions**: Icosphere subdivision level (default: 5)
-- **noise_scale**: Scale of noise patterns (default: 0.5)
-- **noise_octaves**: Number of noise layers (default: 6)
-- **seed_value**: Random seed for terrain generation (default: 12345)
+- **terrain_height**: Maximum height variation (default: 15.0)
+- **subdivisions**: Icosphere subdivision level (default: 6)
+
+**Feature Toggles:**
+- **enable_tectonic_plates**: Use tectonic system vs simple noise (default: true)
+- **enable_cities**: Generate procedural cities (default: true)
+- **enable_caves**: Place cave entrance markers (default: true)
+- **enable_advanced_shader**: Use triplanar shader vs simple material (default: true)
 
 ### Water Settings
 Edit in `SphericalWater` node:
@@ -171,8 +168,7 @@ Edit in `OrbitalCamera` node:
 - **rotation_speed**: Keyboard rotation speed (default: 0.3)
 - **zoom_speed**: Zoom speed (default: 20.0)
 
-### Tectonic Terrain Settings (Tectonic Scenes Only)
-Edit in `TectonicTerrain` node:
+**Tectonic Plates Settings** (when enable_tectonic_plates = true):
 - **num_plates**: Number of tectonic plates (default: 8)
 - **plate_seed**: Random seed for plate generation (default: 12345)
 - **mountain_height**: Height multiplier for mountains (default: 1.0)
@@ -182,6 +178,8 @@ Edit in `TectonicTerrain` node:
 - **continental_roughness**: Roughness of continents (default: 0.3)
 - **oceanic_smoothness**: Smoothness of oceans (default: 0.9)
 - **erosion_amount**: Overall terrain smoothing (default: 0.5)
+
+**Cities and Caves Settings** (when enable_cities/enable_caves = true):
 - **num_cities**: Number of procedural cities (default: 5)
 - **num_caves**: Number of cave entrance markers (default: 10)
 - **city_flatten_radius**: Radius of flattened city platforms (default: 15.0)
@@ -197,38 +195,19 @@ Edit in `Player` node:
 - **air_control**: Movement control while airborne (default: 2.5)
 - **water_level**: Height threshold for swimming (default: -8.0)
 
-### LOD System Settings (LOD Scenes Only)
-Edit in `SphericalTerrainLOD` node:
-- **enable_lod**: Enable/disable LOD system (default: true)
-- **lod_level_count**: Number of detail levels (default: 4)
-- **lod_distance_0**: Distance for highest detail (default: 150.0)
-- **lod_distance_1**: Distance for medium detail (default: 300.0)
-- **lod_distance_2**: Distance for low detail (default: 600.0)
-- **enable_frustum_culling**: Enable frustum culling (default: true)
-- **enable_distance_culling**: Enable distance culling (default: true)
-- **max_view_distance**: Maximum render distance (default: 2000.0)
-- **update_frequency**: Seconds between LOD updates (default: 0.1)
-- **chunk_divisions**: Number of terrain chunks (default: 12)
-
 ## Controls
 
-### Launcher
-- **O**: Launch Orbital Camera (smooth basic)
-- **P**: Launch Player Mode (smooth basic)
-- **T**: Launch Orbital Camera (tectonic plates)
-- **Y**: Launch Player Mode (tectonic plates)
-- **L**: Launch Orbital Camera with LOD (optimized)
-- **K**: Launch Player Mode with LOD (optimized)
-- **ESC**: Quit
+### View Switching
+- **V**: Toggle between Orbital and Player views
+- **ESC**: Quit (when in Orbital view) / Release mouse (when in Player view)
 
-### Orbital Camera Mode
+### Orbital View
 - **Right Mouse Button + Drag**: Rotate camera around planet
 - **Middle Mouse Button + Drag**: Pan camera
 - **Mouse Wheel**: Zoom in/out
 - **Arrow Keys**: Rotate camera
-- **ESC**: Quit application
 
-### Player Mode
+### Player View
 - **WASD**: Move (forward/left/back/right)
 - **Shift**: Sprint
 - **Space**: Jump (or swim upward when underwater)
