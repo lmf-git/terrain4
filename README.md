@@ -50,25 +50,30 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
   - Continental roughness vs oceanic smoothness
   - City flatten radius and strength
 
-### ⚡ Advanced LOD System (NEW)
+### ⚡ Advanced LOD System (FULLY IMPLEMENTED)
+- **Cubesphere-Based Terrain**: 6-face cube sphere with quadtree subdivision
+- **Dynamic Chunk Management**: Chunks subdivide/merge based on camera distance
 - **Frustum Culling**: Only renders terrain chunks visible to the camera
-- **Distance-Based LOD**: Automatically reduces mesh detail for distant terrain
-  - 4 LOD levels with configurable distances
+- **Distance-Based LOD**: 6 LOD levels with configurable distance thresholds
+  - Close: 150m, Medium-Close: 300m, Medium: 600m, Medium-Far: 1200m, Far: 2400m, Very Far: 4800m
   - Seamless transitions between detail levels
-- **Chunk-Based Terrain**: Divides sphere into manageable chunks
-- **Distance Culling**: Hides terrain beyond max view distance
-- **Occlusion-Ready**: Framework supports occlusion culling
-- **Performance Optimized**: Update frequency configurable (default: 10 FPS)
-- **Perfect for large-scale planets** with thousands of triangles
+- **Chunk Stitching**: Prevents seams between different LOD levels
+- **Quadtree Subdivision**: Each chunk splits into 4 children when needed
+- **Chunk-Based Features**: Cities, airports, and caves placed consistently across chunks
+- **Performance Optimized**: Only generates visible, required detail levels
+- **Scalable**: Perfect for massive planets with millions of triangles
 
 ### 🌍 Spherical Terrain Generation
-- **Icosphere-based mesh generation** with customizable subdivision levels
-- **Three terrain systems**:
-  - **Basic**: Smooth noise-based terrain (6 subdivisions, Perlin noise)
-  - **Tectonic**: Realistic plate tectonics with mountains and oceans
-  - **LOD**: Advanced chunk-based system with culling (best for large planets)
-- **Improved smoothness**: Reduced from 6 to 3 octaves, Perlin instead of Simplex
-- **Higher detail**: Increased subdivisions from 5 to 6 for smoother curves
+- **Cubesphere with Quadtree LOD** (PRIMARY SYSTEM):
+  - 6-face cube sphere subdivided dynamically based on camera distance
+  - Tectonic plates, cities, airports, and roads fully integrated
+  - Frustum culling and distance-based detail management
+  - Optimized for massive planetary scales
+- **Legacy Icosphere System** (also available in planet_terrain.gd):
+  - Single-mesh icosphere with fixed subdivision
+  - Good for smaller planets or simpler scenes
+- **Improved smoothness**: 3 octaves of Perlin noise
+- **5-layer noise system**: Mountains, chains, hills, valleys, and fine detail
 - **PBR materials** with proper normal mapping and lighting
 
 ### 🌊 Realistic Water System
@@ -121,30 +126,35 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 ```
 terrain4/
 ├── scenes/
-│   └── main.tscn              # Main game scene (unified)
+│   └── main.tscn                   # Main game scene (unified)
 ├── scripts/
-│   ├── planet_terrain.gd      # Unified terrain system (all features)
-│   ├── spherical_water.gd     # Water system controller
-│   ├── orbital_camera.gd      # Orbital camera controller
-│   ├── player_character.gd    # Enhanced player controller
-│   ├── atmosphere.gd          # Atmosphere renderer
-│   └── view_switcher.gd       # Handles view mode switching
+│   ├── planet_terrain_lod.gd       # LOD chunk-based terrain (PRIMARY)
+│   ├── planet_terrain.gd           # Legacy single-mesh terrain
+│   ├── spherical_water.gd          # Water system controller
+│   ├── orbital_camera.gd           # Orbital camera controller
+│   ├── player_character.gd         # Enhanced player controller
+│   ├── atmosphere.gd               # Atmosphere renderer
+│   └── view_switcher.gd            # Handles view mode switching
 ├── shaders/
-│   ├── water.gdshader         # Water shader with waves
-│   ├── atmosphere.gdshader    # Atmospheric scattering
+│   ├── water.gdshader              # Water shader with waves
+│   ├── atmosphere.gdshader         # Inner atmosphere scattering
+│   ├── atmosphere_outer.gdshader   # Outer atmosphere glow
 │   └── terrain_triplanar.gdshader  # Advanced triplanar terrain shader
-└── project.godot              # Godot project configuration
+└── project.godot                   # Godot project configuration
 ```
 
 ## Configuration
 
-### Unified Terrain Settings
+### LOD Terrain Settings (PlanetTerrainLOD - Primary)
 Edit in `PlanetTerrain` node:
 
 **Planet Properties:**
-- **planet_radius**: Base radius of planet (default: 100.0)
-- **terrain_height**: Maximum height variation (default: 15.0)
-- **subdivisions**: Icosphere subdivision level (default: 6)
+- **planet_radius**: Base radius of planet (default: 500.0)
+- **terrain_height**: Maximum height variation (default: 40.0)
+- **max_lod_level**: Maximum subdivision depth (default: 6)
+- **lod_distances**: Array of distance thresholds for each LOD level
+  - Default: [150.0, 300.0, 600.0, 1200.0, 2400.0, 4800.0]
+  - Lower values = more detail at closer distances
 
 **Feature Toggles:**
 - **enable_tectonic_plates**: Use tectonic system vs simple noise (default: true)
@@ -219,13 +229,30 @@ Edit in `Player` node:
 
 ## Technical Details
 
-### Terrain Generation Algorithm
+### LOD Terrain Generation Algorithm (Cubesphere)
+1. Creates 6 root chunks (one per cube face)
+2. Each chunk is a quadtree node with UV bounds on its face
+3. Every frame, for each visible chunk:
+   - Calculate distance from camera to chunk center
+   - Compare distance against LOD threshold array
+   - Subdivide into 4 children if camera is too close
+   - Merge children back if camera is far enough
+   - Perform frustum culling to hide off-screen chunks
+4. When generating chunk mesh:
+   - Convert cube UV coordinates to sphere positions
+   - Apply tectonic height calculation at each vertex
+   - Generate normals and tangents with SurfaceTool
+   - Add chunk stitching for seamless LOD transitions
+   - Place cities/airports/caves if they fall within chunk bounds
+5. Chunk resolution scales with LOD level (8-128 vertices per edge)
+
+### Legacy Terrain Generation Algorithm (Icosphere)
 1. Creates base icosahedron (20 faces)
 2. Subdivides faces recursively for desired detail level
 3. Normalizes vertices to sphere surface
 4. Applies 3D noise for seamless heightmap
 5. Generates proper normals and UVs
-6. Creates mesh with PBR material
+6. Creates single mesh with PBR material
 
 ### Water Shader Features
 - **Vertex displacement**: Animated using 3D noise functions
@@ -242,23 +269,32 @@ The terrain generation system is designed to support LOD:
 
 ## Performance Tips
 
-- **Reduce subdivisions** (4-5 recommended for testing, 6-7 for production)
-- **Adjust water mesh quality** via subdivisions parameter
-- **Use LOD system** for large-scale terrains (implementation available)
+- **LOD system is now default** and provides excellent performance for large planets
+- **Adjust LOD distances** to balance quality vs performance
+  - Increase distances for better FPS (less detail)
+  - Decrease for more detail (lower FPS)
+- **max_lod_level** controls maximum detail - reduce to 4-5 for lower-end systems
+- **Adjust water mesh quality** via subdivisions parameter (default: 5)
 - **Lower noise octaves** if terrain generation is slow
 - **Disable volumetric fog** for better FPS on lower-end hardware
+- **Use wireframe mode (G key)** to see LOD system in action
 
 ## Future Enhancements
 
+Completed:
+- ✅ Chunk-based terrain generation for larger planets
+- ✅ Dynamic LOD based on camera distance
+- ✅ Collision detection for terrain
+
 Potential improvements:
-- Chunk-based terrain generation for larger planets
-- Dynamic LOD based on camera distance
-- Terrain texture splatting based on height/slope
-- Underwater rendering effects
-- Cloud layer generation
-- Atmospheric scattering with Rayleigh/Mie scattering
-- Collision detection for terrain
-- Biome system with varied terrain types
+- Advanced texture splatting based on height/slope/biome
+- Underwater rendering effects (caustics, fog)
+- Cloud layer generation with weather simulation
+- More advanced atmospheric scattering (Rayleigh/Mie)
+- Climate-based biome system (temperature/precipitation)
+- Crater generation for moons
+- Compute shader optimization for height calculations
+- Occlusion culling for further performance gains
 
 ## Requirements
 

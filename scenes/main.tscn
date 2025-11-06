@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://main_scene"]
 
-[ext_resource type="Script" path="res://scripts/planet_terrain.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/planet_terrain_lod.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/spherical_water.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/orbital_camera.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/atmosphere.gd" id="4"]
@@ -39,7 +39,8 @@ script = ExtResource("6")
 script = ExtResource("1")
 planet_radius = 500.0
 terrain_height = 40.0
-subdivisions = 7
+max_lod_level = 6
+lod_distances = [150.0, 300.0, 600.0, 1200.0, 2400.0, 4800.0]
 enable_tectonic_plates = true
 enable_cities = true
 enable_caves = true
