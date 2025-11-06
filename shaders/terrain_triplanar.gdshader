@@ -2,11 +2,12 @@ shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
 // Terrain heights for biome transitions
-uniform float water_level = -0.2;
-uniform float sand_level = 0.3;
-uniform float grass_level = 1.5;
-uniform float rock_level = 4.0;
-uniform float snow_level = 7.0;
+// Oceanic: -0.3, Continental: 3.75+, Mountains: up to ~14
+uniform float water_level = -0.3;
+uniform float sand_level = 0.5;
+uniform float grass_level = 3.0;
+uniform float rock_level = 7.0;
+uniform float snow_level = 11.0;
 
 // Triplanar texture scale
 uniform float texture_scale = 0.1;

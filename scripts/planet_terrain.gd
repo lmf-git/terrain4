@@ -157,8 +157,13 @@ func setup_material() -> void:
 		if shader:
 			terrain_material = ShaderMaterial.new()
 			terrain_material.shader = shader
-			# Set water level parameter to match terrain generation
+			# Set biome levels to match terrain generation
+			# Oceanic floor: -0.3, Continental base: 3.75, Mountains: up to ~14
 			terrain_material.set_shader_parameter("water_level", -ocean_depth * terrain_height)
+			terrain_material.set_shader_parameter("sand_level", 0.5)
+			terrain_material.set_shader_parameter("grass_level", 3.0)
+			terrain_material.set_shader_parameter("rock_level", 7.0)
+			terrain_material.set_shader_parameter("snow_level", 11.0)
 		else:
 			# Fallback to simple material
 			terrain_material = StandardMaterial3D.new()

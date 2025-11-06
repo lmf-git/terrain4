@@ -87,9 +87,8 @@ func _input(event: InputEvent) -> void:
 		pitch -= event.relative.y * mouse_sensitivity
 		pitch = clamp(pitch, -PI/2, PI/2)
 
-		# Yaw (left/right) - allow when airborne or swimming
-		if not is_on_floor() or is_swimming:
-			yaw -= event.relative.x * mouse_sensitivity
+		# Yaw (left/right) - always allow turning
+		yaw -= event.relative.x * mouse_sensitivity
 
 	# Toggle mouse capture
 	if event is InputEventKey and event.pressed:
