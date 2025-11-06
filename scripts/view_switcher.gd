@@ -6,11 +6,11 @@ extends Node3D
 @onready var player = $Player
 
 enum ViewMode { ORBITAL, PLAYER }
-var current_view: ViewMode = ViewMode.ORBITAL
+var current_view: ViewMode = ViewMode.PLAYER
 
 func _ready() -> void:
-	# Start in orbital view
-	set_view(ViewMode.ORBITAL)
+	# Start in player view
+	set_view(ViewMode.PLAYER)
 
 func _input(event: InputEvent) -> void:
 	# Toggle view with V key

@@ -6,8 +6,8 @@ class_name Atmosphere
 
 @export var planet_radius: float = 100.0
 @export var atmosphere_radius: float = 110.0
-@export var atmosphere_color: Color = Color(0.4, 0.6, 1.0, 1.0)
-@export var atmosphere_density: float = 0.5
+@export var atmosphere_color: Color = Color(0.5, 0.7, 1.0, 1.0)
+@export var atmosphere_density: float = 0.3
 
 func _ready() -> void:
 	create_atmosphere()

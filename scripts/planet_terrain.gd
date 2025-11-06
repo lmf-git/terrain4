@@ -18,8 +18,8 @@ class_name PlanetTerrain
 @export_group("Tectonic Plates")
 @export var num_plates: int = 8
 @export var plate_seed: int = 12345
-@export var mountain_height: float = 1.0  # Mountains at plate boundaries
-@export var ocean_depth: float = 0.3  # Oceanic vs continental plates
+@export var mountain_height: float = 1.5  # Mountains at plate boundaries
+@export var ocean_depth: float = 0.02  # Oceanic vs continental plates
 
 @export_group("Polar Regions")
 @export var polar_flatness: float = 0.7  # How flat poles are (0-1)
@@ -239,13 +239,29 @@ func get_tectonic_height(normal: Vector3) -> float:
 	var base_height = 0.0
 	if plate_type > 0.5:
 		# Continental plate - above sea level
-		base_height = 0.2
+		base_height = 0.25
 	else:
 		# Oceanic plate - below sea level
 		base_height = -ocean_depth
 
-	# Mountains at plate boundaries
-	var mountain = boundary_strength * mountain_height
+	# Mountains at plate boundaries (reduced)
+	var boundary_mountain = boundary_strength * mountain_height * 0.3
+
+	# Add proper mountain ranges across continents using multi-octave noise
+	var mountain_noise = 0.0
+	if plate_type > 0.5:  # Only on continental plates
+		# Large-scale mountain ranges
+		var mountain_base = noise.get_noise_3d(normal.x * 2, normal.y * 2, normal.z * 2)
+		mountain_base = abs(mountain_base)  # Ridge-like mountains
+		mountain_base = pow(mountain_base, 1.5)  # Sharper peaks
+
+		# Medium-scale hills
+		var hills = noise.get_noise_3d(normal.x * 4, normal.y * 4, normal.z * 4) * 0.5
+
+		# Small-scale detail
+		var detail = noise.get_noise_3d(normal.x * 8, normal.y * 8, normal.z * 8) * 0.25
+
+		mountain_noise = (mountain_base + hills + detail) * mountain_height * 0.8
 
 	# Add smooth terrain variation
 	var terrain_detail = noise.get_noise_3d(normal.x * 5, normal.y * 5, normal.z * 5)
@@ -253,7 +269,7 @@ func get_tectonic_height(normal: Vector3) -> float:
 	# Apply different roughness based on plate type
 	if plate_type > 0.5:
 		# Continental - some roughness
-		terrain_detail *= continental_roughness
+		terrain_detail *= continental_roughness * 0.5
 	else:
 		# Oceanic - very smooth
 		terrain_detail *= (1.0 - oceanic_smoothness) * 0.2
@@ -266,11 +282,12 @@ func get_tectonic_height(normal: Vector3) -> float:
 
 		# Flatten terrain at poles
 		base_height = lerp(base_height, 0.0, polar_blend * polar_flatness)
-		mountain *= (1.0 - polar_blend * 0.7)
+		boundary_mountain *= (1.0 - polar_blend * 0.7)
+		mountain_noise *= (1.0 - polar_blend * 0.8)
 		terrain_detail *= (1.0 - polar_blend * 0.8)
 
 	# Combine all height factors
-	var total_height = (base_height + mountain + terrain_detail) * terrain_height
+	var total_height = (base_height + boundary_mountain + mountain_noise + terrain_detail) * terrain_height
 
 	# Apply erosion (smoothing)
 	total_height *= (1.0 - erosion_amount * 0.3)
@@ -423,8 +440,8 @@ func generate_cities_and_caves() -> void:
 
 			var city_node = Node3D.new()
 			city_node.name = "City_" + str(i)
-			city_node.global_position = city_pos
 			add_child(city_node)
+			city_node.global_position = city_pos
 
 			# Generate 5-15 buildings per city
 			var num_buildings = rng.randi_range(5, 15)
@@ -455,7 +472,19 @@ func generate_cities_and_caves() -> void:
 
 			# Then set position and orientation
 			cave_mesh.global_position = cave_pos
-			cave_mesh.look_at(global_position, cave_normal)
+
+			# Orient cave - construct basis manually to avoid colinear warning
+			var forward = (global_position - cave_pos).normalized()
+			# Get a perpendicular vector for "up" direction
+			var right = Vector3.UP.cross(forward)
+			if right.length_squared() < 0.01:
+				# If forward is too close to UP, use RIGHT instead
+				right = Vector3.RIGHT.cross(forward)
+			right = right.normalized()
+			var up = forward.cross(right).normalized()
+
+			# Set the transform
+			cave_mesh.global_transform.basis = Basis(right, up, -forward)
 
 func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vector3, city_height: float, rng: RandomNumberGenerator) -> void:
 	# Random building size

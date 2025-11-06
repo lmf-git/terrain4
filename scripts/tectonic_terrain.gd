@@ -379,8 +379,8 @@ func generate_cities_and_caves() -> void:
 
 		var city_node = Node3D.new()
 		city_node.name = "City_" + str(i)
-		city_node.global_position = city_pos
 		add_child(city_node)
+		city_node.global_position = city_pos
 
 		# Generate 5-15 buildings per city
 		var num_buildings = rng.randi_range(5, 15)
@@ -410,7 +410,19 @@ func generate_cities_and_caves() -> void:
 
 		# Then set position and orientation
 		cave_mesh.global_position = cave_pos
-		cave_mesh.look_at(global_position, cave_normal)
+
+		# Orient cave - construct basis manually to avoid colinear warning
+		var forward = (global_position - cave_pos).normalized()
+		# Get a perpendicular vector for "up" direction
+		var right = Vector3.UP.cross(forward)
+		if right.length_squared() < 0.01:
+			# If forward is too close to UP, use RIGHT instead
+			right = Vector3.RIGHT.cross(forward)
+		right = right.normalized()
+		var up = forward.cross(right).normalized()
+
+		# Set the transform
+		cave_mesh.global_transform.basis = Basis(right, up, -forward)
 
 func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vector3, city_height: float, rng: RandomNumberGenerator) -> void:
 	# Random building size

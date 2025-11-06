@@ -11,9 +11,9 @@ class_name PlayerCharacter
 @export_group("Movement")
 @export var walk_speed: float = 50.0
 @export var sprint_speed: float = 100.0
-@export var jump_velocity: float = 250.0
+@export var jump_velocity: float = 50.0
 @export var swim_speed: float = 30.0
-@export var gravity_strength: float = 2.0
+@export var gravity_strength: float = 20.0
 @export var air_control: float = 2.5
 
 @export_group("Mouse Look")
@@ -21,7 +21,7 @@ class_name PlayerCharacter
 @export var vertical_look_limit: float = 89.0
 
 @export_group("Water")
-@export var water_level: float = -8.0  # Height relative to base terrain
+@export var water_level: float = -0.2  # Height relative to base terrain
 
 var camera: Camera3D
 var camera_pivot: Node3D
@@ -201,9 +201,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func align_to_surface(up_dir: Vector3, delta: float) -> void:
-	# Smoothly align Y-axis to surface normal
+	# Quickly align Y-axis to surface normal for responsive feel
 	var current_up = transform.basis.y
-	var new_up = current_up.slerp(up_dir, delta * 8.0)
+	var new_up = current_up.slerp(up_dir, delta * 15.0)  # Faster alignment
 
 	# Preserve forward direction as much as possible
 	var forward = transform.basis.z
@@ -216,10 +216,13 @@ func align_to_surface(up_dir: Vector3, delta: float) -> void:
 	right = right.normalized()
 	forward = new_up.cross(right).normalized()
 
-	# Reconstruct basis
+	# Reconstruct basis - ensure orthogonal
 	transform.basis.x = right
 	transform.basis.y = new_up
 	transform.basis.z = forward
+
+	# Orthonormalize to prevent drift
+	transform.basis = transform.basis.orthonormalized()
 
 func position_on_planet_surface() -> void:
 	# Position character at spawn height above planet center
