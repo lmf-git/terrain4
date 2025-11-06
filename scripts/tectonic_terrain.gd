@@ -411,13 +411,18 @@ func generate_cities_and_caves() -> void:
 		# Then set position and orientation
 		cave_mesh.global_position = cave_pos
 
-		# Orient cave - use tangent vector as up to avoid colinear warning
-		var to_center = (global_position - cave_pos).normalized()
-		var up_vec = cave_normal
-		# Check if vectors are too aligned, use alternate up vector
-		if abs(to_center.dot(up_vec)) > 0.99:
-			up_vec = Vector3.UP if abs(cave_normal.y) < 0.9 else Vector3.RIGHT
-		cave_mesh.look_at(global_position, up_vec)
+		# Orient cave - construct basis manually to avoid colinear warning
+		var forward = (global_position - cave_pos).normalized()
+		# Get a perpendicular vector for "up" direction
+		var right = Vector3.UP.cross(forward)
+		if right.length_squared() < 0.01:
+			# If forward is too close to UP, use RIGHT instead
+			right = Vector3.RIGHT.cross(forward)
+		right = right.normalized()
+		var up = forward.cross(right).normalized()
+
+		# Set the transform
+		cave_mesh.global_transform.basis = Basis(right, up, -forward)
 
 func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vector3, city_height: float, rng: RandomNumberGenerator) -> void:
 	# Random building size
