@@ -46,8 +46,8 @@ enable_caves = true
 enable_advanced_shader = true
 num_plates = 8
 plate_seed = 12345
-mountain_height = 1.0
-ocean_depth = 0.08
+mountain_height = 1.5
+ocean_depth = 0.02
 polar_flatness = 0.7
 polar_extent = 0.3
 continental_roughness = 0.3
@@ -61,17 +61,18 @@ city_flatten_strength = 0.9
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
 planet_radius = 100.0
-water_level = -0.5
+water_level = -0.2
 subdivisions = 4
-wave_speed = 0.5
-wave_scale = 1.0
-wave_height = 0.3
+wave_speed = 0.3
+wave_scale = 0.5
+wave_height = 0.05
 
 [node name="Atmosphere" type="MeshInstance3D" parent="Planet"]
 script = ExtResource("4")
 planet_radius = 100.0
 atmosphere_radius = 110.0
-atmosphere_density = 0.5
+atmosphere_color = Color(0.5, 0.7, 1, 1)
+atmosphere_density = 0.3
 
 [node name="OrbitalCamera" type="Node3D" parent="."]
 script = ExtResource("3")
@@ -92,7 +93,7 @@ jump_velocity = 50.0
 swim_speed = 30.0
 gravity_strength = 20.0
 air_control = 2.5
-water_level = -0.5
+water_level = -0.2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 shape = SubResource("CapsuleShape3D_1")
