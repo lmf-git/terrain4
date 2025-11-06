@@ -71,8 +71,8 @@ wave_height = 0.05
 script = ExtResource("4")
 planet_radius = 100.0
 atmosphere_radius = 110.0
-atmosphere_color = Color(0.5, 0.7, 1, 1)
-atmosphere_density = 0.3
+atmosphere_color = Color(0.4, 0.65, 1, 1)
+atmosphere_density = 0.15
 
 [node name="OrbitalCamera" type="Node3D" parent="."]
 script = ExtResource("3")

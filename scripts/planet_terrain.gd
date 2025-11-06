@@ -244,24 +244,28 @@ func get_tectonic_height(normal: Vector3) -> float:
 		# Oceanic plate - below sea level
 		base_height = -ocean_depth
 
-	# Mountains at plate boundaries (reduced)
-	var boundary_mountain = boundary_strength * mountain_height * 0.3
+	# Mountains at plate boundaries - barely visible, just subtle ridges
+	var boundary_mountain = boundary_strength * mountain_height * 0.05
 
 	# Add proper mountain ranges across continents using multi-octave noise
 	var mountain_noise = 0.0
 	if plate_type > 0.5:  # Only on continental plates
-		# Large-scale mountain ranges
+		# Large-scale mountain ranges - MUCH STRONGER
 		var mountain_base = noise.get_noise_3d(normal.x * 2, normal.y * 2, normal.z * 2)
 		mountain_base = abs(mountain_base)  # Ridge-like mountains
-		mountain_base = pow(mountain_base, 1.5)  # Sharper peaks
+		mountain_base = pow(mountain_base, 1.8)  # Sharper, taller peaks
 
 		# Medium-scale hills
-		var hills = noise.get_noise_3d(normal.x * 4, normal.y * 4, normal.z * 4) * 0.5
+		var hills = noise.get_noise_3d(normal.x * 4, normal.y * 4, normal.z * 4) * 0.6
+
+		# Additional large mountain features
+		var large_mountains = noise.get_noise_3d(normal.x * 1.5, normal.y * 1.5, normal.z * 1.5)
+		large_mountains = abs(large_mountains) * 0.8
 
 		# Small-scale detail
-		var detail = noise.get_noise_3d(normal.x * 8, normal.y * 8, normal.z * 8) * 0.25
+		var detail = noise.get_noise_3d(normal.x * 8, normal.y * 8, normal.z * 8) * 0.3
 
-		mountain_noise = (mountain_base + hills + detail) * mountain_height * 0.8
+		mountain_noise = (mountain_base + hills + large_mountains + detail) * mountain_height * 2.5
 
 	# Add smooth terrain variation
 	var terrain_detail = noise.get_noise_3d(normal.x * 5, normal.y * 5, normal.z * 5)
