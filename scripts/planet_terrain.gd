@@ -4,6 +4,9 @@ class_name PlanetTerrain
 ## Unified spherical terrain system with all features
 ## Combines simple noise, tectonic plates, cities, caves, and advanced shaders
 
+# Shader paths as constants for preloading
+const TERRAIN_SHADER_PATH := "res://shaders/terrain_triplanar.gdshader"
+
 @export_group("Planet Properties")
 @export var planet_radius: float = 500.0  # Larger planet for better scale
 @export var terrain_height: float = 40.0  # Increased height variation
@@ -37,7 +40,6 @@ class_name PlanetTerrain
 @export var city_flatten_strength: float = 0.9
 
 var noise: FastNoiseLite
-var plate_noise: FastNoiseLite
 var terrain_material: Material
 var terrain_meshes: Array[MeshInstance3D] = []
 
@@ -62,7 +64,7 @@ func _ready() -> void:
 		generate_cities_and_caves()
 
 func setup_noise() -> void:
-	# Main terrain noise - smooth
+	# Main terrain noise - smooth Perlin for natural features
 	noise = FastNoiseLite.new()
 	noise.seed = plate_seed
 	noise.noise_type = FastNoiseLite.TYPE_PERLIN
@@ -70,14 +72,6 @@ func setup_noise() -> void:
 	noise.fractal_gain = 0.4
 	noise.fractal_lacunarity = 2.5
 	noise.frequency = 0.3  # Larger features
-
-	# Plate boundary noise
-	plate_noise = FastNoiseLite.new()
-	plate_noise.seed = plate_seed + 1000
-	plate_noise.noise_type = FastNoiseLite.TYPE_CELLULAR
-	plate_noise.cellular_distance_function = FastNoiseLite.DISTANCE_EUCLIDEAN
-	plate_noise.cellular_return_type = FastNoiseLite.RETURN_CELL_VALUE
-	plate_noise.frequency = 0.8
 
 func setup_plates() -> void:
 	# Generate random tectonic plate centers on sphere
@@ -153,31 +147,32 @@ func get_base_terrain_height(normal: Vector3) -> float:
 func setup_material() -> void:
 	if enable_advanced_shader:
 		# Use advanced triplanar shader with procedural textures
-		var shader = load("res://shaders/terrain_triplanar.gdshader")
+		var shader := load(TERRAIN_SHADER_PATH) as Shader
 		if shader:
-			terrain_material = ShaderMaterial.new()
-			terrain_material.shader = shader
+			var shader_mat := ShaderMaterial.new()
+			shader_mat.shader = shader
 			# Set biome levels to match terrain generation
-			# Oceanic floor: -0.3, Continental base: 3.75, Mountains: up to ~14
-			terrain_material.set_shader_parameter("water_level", -ocean_depth * terrain_height)
-			terrain_material.set_shader_parameter("sand_level", 0.5)
-			terrain_material.set_shader_parameter("grass_level", 3.0)
-			terrain_material.set_shader_parameter("rock_level", 7.0)
-			terrain_material.set_shader_parameter("snow_level", 11.0)
+			# Oceanic floor: -0.6, Continental base: 9-12.8, Mountains: up to ~140
+			shader_mat.set_shader_parameter("water_level", -ocean_depth * terrain_height)
+			shader_mat.set_shader_parameter("sand_level", 0.5)
+			shader_mat.set_shader_parameter("grass_level", 3.0)
+			shader_mat.set_shader_parameter("rock_level", 7.0)
+			shader_mat.set_shader_parameter("snow_level", 11.0)
+			terrain_material = shader_mat
 		else:
-			# Fallback to simple material
-			terrain_material = StandardMaterial3D.new()
-			terrain_material.albedo_color = Color(0.45, 0.4, 0.3)
-			terrain_material.roughness = 0.9
-			terrain_material.metallic = 0.0
-			terrain_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+			push_error("Failed to load terrain shader: " + TERRAIN_SHADER_PATH)
+			_create_fallback_material()
 	else:
-		# Simple material
-		terrain_material = StandardMaterial3D.new()
-		terrain_material.albedo_color = Color(0.45, 0.4, 0.3)
-		terrain_material.roughness = 0.9
-		terrain_material.metallic = 0.0
-		terrain_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		_create_fallback_material()
+
+func _create_fallback_material() -> void:
+	## Creates a simple fallback material when shader loading fails
+	var simple_mat := StandardMaterial3D.new()
+	simple_mat.albedo_color = Color(0.45, 0.4, 0.3)
+	simple_mat.roughness = 0.9
+	simple_mat.metallic = 0.0
+	simple_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	terrain_material = simple_mat
 
 func generate_terrain() -> void:
 	var vertices: PackedVector3Array = []
@@ -466,8 +461,8 @@ func create_mesh_from_data(vertices: PackedVector3Array, indices: PackedInt32Arr
 	add_child(mesh_instance)
 	terrain_meshes.append(mesh_instance)
 
-	# Add collision immediately after adding to scene tree
-	mesh_instance.create_trimesh_collision()
+	# Defer collision creation to prevent freezing during generation
+	mesh_instance.call_deferred("create_trimesh_collision")
 
 func generate_cities_and_caves() -> void:
 	var rng = RandomNumberGenerator.new()
@@ -604,8 +599,8 @@ func create_building(city_node: Node3D, city_normal: Vector3, city_center: Vecto
 	building_transform.basis.z = forward
 	building.global_transform = building_transform
 
-	# Add collision to building
-	building.create_trimesh_collision()
+	# Defer collision creation to prevent freezing
+	building.call_deferred("create_trimesh_collision")
 
 func create_airport(city_node: Node3D, city_normal: Vector3, city_pos: Vector3, city_height: float, right: Vector3, forward: Vector3, up: Vector3, rng: RandomNumberGenerator) -> void:
 	# Airport positioned at edge of city
@@ -636,7 +631,7 @@ func create_airport(city_node: Node3D, city_normal: Vector3, city_pos: Vector3, 
 	runway_transform.basis.x = right
 	runway_transform.basis.z = forward
 	runway.global_transform = runway_transform
-	runway.create_trimesh_collision()
+	runway.call_deferred("create_trimesh_collision")
 
 	# Add small terminal building next to runway
 	var terminal = MeshInstance3D.new()
@@ -654,7 +649,7 @@ func create_airport(city_node: Node3D, city_normal: Vector3, city_pos: Vector3, 
 	city_node.add_child(terminal)
 	terminal.global_position = terminal_pos
 	terminal.global_transform.basis = runway_transform.basis
-	terminal.create_trimesh_collision()
+	terminal.call_deferred("create_trimesh_collision")
 
 func create_roads(city_node: Node3D, city_normal: Vector3, city_pos: Vector3, city_height: float, right: Vector3, forward: Vector3, up: Vector3, rng: RandomNumberGenerator) -> void:
 	# Create simple grid of roads

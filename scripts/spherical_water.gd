@@ -4,6 +4,9 @@ class_name SphericalWater
 ## Spherical water system for planet
 ## Creates ocean shell around planet
 
+# Shader path as constant
+const WATER_SHADER_PATH := "res://shaders/water.gdshader"
+
 @export var planet_radius: float = 500.0
 @export var water_level: float = -1.0  # Height above planet surface
 @export var subdivisions: int = 5  # Sphere subdivisions for water mesh
@@ -22,7 +25,11 @@ func _ready() -> void:
 	generate_water_sphere()
 
 func setup_material() -> void:
-	var shader = load("res://shaders/water.gdshader")
+	var shader := load(WATER_SHADER_PATH) as Shader
+	if not shader:
+		push_error("Failed to load water shader: " + WATER_SHADER_PATH)
+		return
+
 	water_material = ShaderMaterial.new()
 	water_material.shader = shader
 
@@ -30,10 +37,9 @@ func setup_material() -> void:
 	water_material.set_shader_parameter("wave_speed", wave_speed)
 	water_material.set_shader_parameter("wave_scale", wave_scale)
 	water_material.set_shader_parameter("wave_height", wave_height)
-	water_material.set_shader_parameter("water_color_deep", Color(0.0, 0.1, 0.3, 0.95))
-	water_material.set_shader_parameter("water_color_shallow", Color(0.0, 0.4, 0.6, 0.8))
-	water_material.set_shader_parameter("foam_color", Color(1.0, 1.0, 1.0, 1.0))
-	water_material.set_shader_parameter("roughness", 0.1)
+	water_material.set_shader_parameter("water_color_deep", Color(0.0, 0.15, 0.4, 0.92))
+	water_material.set_shader_parameter("water_color_shallow", Color(0.1, 0.45, 0.7, 0.75))
+	water_material.set_shader_parameter("roughness", 0.15)
 	water_material.set_shader_parameter("metallic", 0.0)
 
 func generate_water_sphere() -> void:
