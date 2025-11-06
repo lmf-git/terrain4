@@ -38,7 +38,7 @@ class_name PlanetTerrain
 
 var noise: FastNoiseLite
 var plate_noise: FastNoiseLite
-var terrain_material: StandardMaterial3D
+var terrain_material: Material
 var terrain_meshes: Array[MeshInstance3D] = []
 
 # Tectonic plate data
