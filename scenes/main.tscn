@@ -111,7 +111,8 @@ environment = SubResource("Environment_1")
 offset_right = 550.0
 offset_bottom = 220.0
 text = "SPHERICAL TERRAIN EXPLORER
-V - Toggle between Orbital and Player view
+V - Toggle Orbital/Player view
+G - Toggle Wireframe (see terrain geometry & LOD)
 
 ORBITAL VIEW:
 • Right-click drag to rotate
