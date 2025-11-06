@@ -1,9 +1,15 @@
-[gd_scene load_steps=8 format=3 uid="uid://main_scene"]
+[gd_scene load_steps=10 format=3 uid="uid://main_scene"]
 
 [ext_resource type="Script" path="res://scripts/planet_terrain.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/spherical_water.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/orbital_camera.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/atmosphere.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/player_character.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/view_switcher.gd" id="6"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.5
+height = 1.8
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -25,6 +31,7 @@ volumetric_fog_density = 0.005
 volumetric_fog_albedo = Color(0.5, 0.6, 0.8, 1)
 
 [node name="Main" type="Node3D"]
+script = ExtResource("6")
 
 [node name="Planet" type="Node3D" parent="."]
 
@@ -75,6 +82,21 @@ max_distance = 2000.0
 rotation_speed = 0.3
 zoom_speed = 20.0
 
+[node name="Player" type="CharacterBody3D" parent="."]
+script = ExtResource("5")
+planet_radius = 100.0
+spawn_height = 130.0
+walk_speed = 50.0
+sprint_speed = 100.0
+jump_velocity = 250.0
+swim_speed = 30.0
+gravity_strength = 2.0
+air_control = 2.5
+water_level = -8.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("CapsuleShape3D_1")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 150, 100)
 light_color = Color(1, 0.95, 0.9, 1)
@@ -85,16 +107,25 @@ shadow_enabled = true
 environment = SubResource("Environment_1")
 
 [node name="DebugLabel" type="Label" parent="."]
-offset_right = 500.0
-offset_bottom = 180.0
-text = "ORBITAL VIEW MODE (Press O)
-• Tectonic plates with mountains and oceans
-• Procedural cities with buildings
-• Cave entrance markers
-• Advanced triplanar shader
-• Polar regions
+offset_right = 550.0
+offset_bottom = 220.0
+text = "SPHERICAL TERRAIN EXPLORER
+V - Toggle between Orbital and Player view
+
+ORBITAL VIEW:
 • Right-click drag to rotate
-• Scroll to zoom"
+• Mouse wheel to zoom
+• Arrow keys to rotate
+
+PLAYER VIEW:
+• WASD - Move
+• Shift - Sprint
+• Space - Jump/Swim up
+• O - Toggle first/third person
+• Mouse - Look around
+
+FEATURES:
+• Tectonic plates • Cities • Caves • Swimming"
 metadata/_edit_use_anchors_ = true
 
 [editable path="Planet"]

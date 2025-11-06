@@ -2,20 +2,21 @@
 
 A complete spherical planetary terrain system with water for Godot 4.5, inspired by games like ARMA 3 and Kerbal Space Program.
 
-## Two Unified Modes
+## Single Unified Experience
 
-**When you run the project, you'll see a launcher with two options:**
+**The project starts directly in the game - no launcher needed!**
 
-- Press **O** for Orbital Camera mode (explore from space)
-- Press **P** for Player Mode (first-person exploration)
+- Press **V** to toggle between Orbital and Player views at any time
+- Switch seamlessly between perspectives during gameplay
 
-**Both modes include ALL features:**
+**All features included:**
 - Tectonic plates with realistic geology
 - Procedural cities with buildings
 - Cave entrance markers
-- Advanced triplanar shader
-- Swimming mechanics (Player mode)
+- Advanced triplanar shader with biomes
+- Swimming mechanics with buoyancy
 - Polar regions
+- First/third person toggle in player mode
 - All features are configurable via export parameters
 
 ## Features
@@ -89,7 +90,7 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 - **Smooth interpolated movement**
 - **Configurable distances and speeds**
 
-### 🚶 Enhanced Player Mode (NEW)
+### 🚶 Enhanced Player System
 - **Spherical gravity system** aligned to planet center
 - **WASD movement** with Sprint (Shift key)
 - **Swimming mechanics** with buoyancy
@@ -120,16 +121,14 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 ```
 terrain4/
 ├── scenes/
-│   ├── launcher.tscn          # Mode selection launcher
-│   ├── main.tscn              # Orbital camera mode
-│   └── player_mode.tscn       # Player mode
+│   └── main.tscn              # Main game scene (unified)
 ├── scripts/
 │   ├── planet_terrain.gd      # Unified terrain system (all features)
 │   ├── spherical_water.gd     # Water system controller
 │   ├── orbital_camera.gd      # Orbital camera controller
 │   ├── player_character.gd    # Enhanced player controller
 │   ├── atmosphere.gd          # Atmosphere renderer
-│   └── scene_selector.gd      # Mode launcher UI
+│   └── view_switcher.gd       # Handles view mode switching
 ├── shaders/
 │   ├── water.gdshader         # Water shader with waves
 │   ├── atmosphere.gdshader    # Atmospheric scattering
@@ -198,19 +197,17 @@ Edit in `Player` node:
 
 ## Controls
 
-### Launcher
-- **O**: Launch Orbital Camera Mode
-- **P**: Launch Player Mode
-- **ESC**: Quit
+### View Switching
+- **V**: Toggle between Orbital and Player views
+- **ESC**: Quit (when in Orbital view) / Release mouse (when in Player view)
 
-### Orbital Camera Mode
+### Orbital View
 - **Right Mouse Button + Drag**: Rotate camera around planet
 - **Middle Mouse Button + Drag**: Pan camera
 - **Mouse Wheel**: Zoom in/out
 - **Arrow Keys**: Rotate camera
-- **ESC**: Quit application
 
-### Player Mode
+### Player View
 - **WASD**: Move (forward/left/back/right)
 - **Shift**: Sprint
 - **Space**: Jump (or swim upward when underwater)
