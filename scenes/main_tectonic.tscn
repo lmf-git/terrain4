@@ -42,6 +42,10 @@ polar_extent = 0.3
 continental_roughness = 0.3
 oceanic_smoothness = 0.9
 erosion_amount = 0.5
+num_cities = 5
+num_caves = 10
+city_flatten_radius = 15.0
+city_flatten_strength = 0.9
 
 [node name="SphericalWater" type="Node3D" parent="Planet"]
 script = ExtResource("2")
@@ -78,12 +82,14 @@ environment = SubResource("Environment_1")
 
 [node name="DebugLabel" type="Label" parent="."]
 offset_right = 500.0
-offset_bottom = 120.0
-text = "TECTONIC TERRAIN MODE
+offset_bottom = 150.0
+text = "TECTONIC TERRAIN MODE (T)
 • 8 Tectonic Plates
 • Realistic Mountains & Oceans
 • Polar Regions
-• Smooth Continents"
+• Procedural Cities with Buildings
+• Cave Entrance Markers
+• Advanced Triplanar Shader"
 metadata/_edit_use_anchors_ = true
 
 [editable path="Planet"]

@@ -9,33 +9,70 @@ class_name PlayerCharacter
 @export var spawn_height: float = 130.0  # Spawn well above terrain (max terrain ~120)
 
 @export_group("Movement")
-@export var walk_speed: float = 5.0
-@export var sprint_speed: float = 10.0
-@export var jump_velocity: float = 6.0
-@export var gravity_strength: float = 15.0
+@export var walk_speed: float = 50.0
+@export var sprint_speed: float = 100.0
+@export var jump_velocity: float = 250.0
+@export var swim_speed: float = 30.0
+@export var gravity_strength: float = 2.0
+@export var air_control: float = 2.5
 
 @export_group("Mouse Look")
-@export var mouse_sensitivity: float = 0.003
+@export var mouse_sensitivity: float = 0.002
 @export var vertical_look_limit: float = 89.0
 
+@export_group("Water")
+@export var water_level: float = -8.0  # Height relative to base terrain
+
 var camera: Camera3D
-var head: Node3D
-var camera_rotation_x: float = 0.0
+var camera_pivot: Node3D
+var player_mesh: MeshInstance3D
+var raycast: RayCast3D
+
+var pitch: float = 0.0  # Camera up/down
+var yaw: float = 0.0    # Player/camera left/right when airborne/swimming
+
+var is_first_person: bool = true
+var third_person_distance: float = 10.0
+var is_swimming: bool = false
+
+var ground_normal: Vector3 = Vector3.UP
 var gravity_direction: Vector3 = Vector3.DOWN
 
 func _ready() -> void:
-	# Create head node for camera rotation
-	head = Node3D.new()
-	add_child(head)
-	head.position = Vector3(0, 1.6, 0)  # Eye height
+	# Create player mesh (visible capsule in third person)
+	player_mesh = MeshInstance3D.new()
+	var capsule_mesh = CapsuleMesh.new()
+	capsule_mesh.radius = 0.5
+	capsule_mesh.height = 2.0
+	player_mesh.mesh = capsule_mesh
+
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.0, 1.0)  # Bright magenta
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.0, 1.0)
+	mat.emission_energy_multiplier = 0.5
+	player_mesh.set_surface_override_material(0, mat)
+	player_mesh.visible = false  # Hidden in first person
+	add_child(player_mesh)
+
+	# Camera pivot for independent rotation
+	camera_pivot = Node3D.new()
+	add_child(camera_pivot)
 
 	# Create camera
 	camera = Camera3D.new()
+	camera.position = Vector3(0, 2.5, 0)  # Eye height
 	camera.fov = 90.0
-	camera.near = 0.1
+	camera.near = 0.01
 	camera.far = 10000.0
 	camera.current = true
-	head.add_child(camera)
+	camera_pivot.add_child(camera)
+
+	# Ground detection raycast
+	raycast = RayCast3D.new()
+	raycast.target_position = Vector3(0, -3.0, 0)
+	raycast.enabled = true
+	add_child(raycast)
 
 	# Spawn above terrain
 	position_on_planet_surface()
@@ -46,70 +83,143 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	# Mouse look
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		# Rotate body left/right
-		rotate_object_local(Vector3.UP, -event.relative.x * mouse_sensitivity)
+		# Pitch (up/down)
+		pitch -= event.relative.y * mouse_sensitivity
+		pitch = clamp(pitch, -PI/2, PI/2)
 
-		# Rotate head up/down
-		camera_rotation_x -= event.relative.y * mouse_sensitivity
-		camera_rotation_x = clamp(camera_rotation_x,
-			-deg_to_rad(vertical_look_limit),
-			deg_to_rad(vertical_look_limit))
-		head.rotation.x = camera_rotation_x
+		# Yaw (left/right) - allow when airborne or swimming
+		if not is_on_floor() or is_swimming:
+			yaw -= event.relative.x * mouse_sensitivity
 
 	# Toggle mouse capture
-	if event.is_action_pressed("ui_cancel"):
-		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		else:
-			get_tree().quit()
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE:
+			if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			else:
+				get_tree().quit()
+		elif event.keycode == KEY_O:
+			# Toggle first/third person camera
+			is_first_person = !is_first_person
+			if is_first_person:
+				camera.position = Vector3(0, 2.5, 0)
+				player_mesh.visible = false
+			else:
+				camera.position = Vector3(0, 2.0, -third_person_distance)
+				player_mesh.visible = true
 
 func _physics_process(delta: float) -> void:
 	# Calculate gravity direction (toward planet center)
-	gravity_direction = (planet_center - global_position).normalized()
+	var feet_position = global_position
+	gravity_direction = (planet_center - feet_position).normalized()
+	var planet_up = -gravity_direction
 
-	# Align character to planet surface
-	align_to_planet()
+	# Update raycast direction to point down from player
+	raycast.target_position = -transform.basis.y * 3.0
 
-	# Apply gravity
-	if not is_on_floor():
+	# Check ground normal from raycast
+	if raycast.is_colliding():
+		ground_normal = raycast.get_collision_normal()
+		var collision_point = raycast.get_collision_point()
+
+		# Check if underwater
+		var distance_from_center = collision_point.distance_to(planet_center)
+		var terrain_height = distance_from_center - planet_radius
+		is_swimming = terrain_height < water_level
+	else:
+		ground_normal = planet_up
+		is_swimming = false
+
+	# Apply gravity (reduced when swimming for buoyancy)
+	if is_swimming:
+		velocity += gravity_direction * gravity_strength * 0.2 * delta
+	else:
 		velocity += gravity_direction * gravity_strength * delta
 
-	# Handle jump
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
-		velocity -= gravity_direction * jump_velocity
+	# Jump or swim up
+	if Input.is_action_just_pressed("ui_accept"):
+		if is_swimming:
+			velocity += planet_up * swim_speed  # Swim up
+		elif is_on_floor():
+			velocity += planet_up * jump_velocity  # Jump
 
-	# Get input direction relative to character orientation
+	# Get input direction
 	var input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
-	# Calculate movement direction
-	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	if is_swimming:
+		# Swimming mode - free 3D movement
+		camera_pivot.transform = Transform3D.IDENTITY
+		camera_pivot.rotate_object_local(Vector3.UP, yaw)
+		camera_pivot.rotate_object_local(Vector3.RIGHT, pitch)
 
-	# Apply movement speed
-	var current_speed = sprint_speed if Input.is_action_pressed("ui_shift") else walk_speed
+		if input_dir.length() > 0:
+			var cam_basis = camera_pivot.global_transform.basis
+			var move_dir = (cam_basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+			velocity += move_dir * swim_speed * delta * 5.0
 
-	if direction != Vector3.ZERO:
-		velocity.x = direction.x * current_speed
-		velocity.z = direction.z * current_speed
+		# Water drag
+		velocity = velocity.lerp(Vector3.ZERO, delta * 2.0)
+
+	elif is_on_floor():
+		# Grounded - align to surface
+		align_to_surface(ground_normal, delta)
+
+		# Camera rotation
+		camera_pivot.transform = Transform3D.IDENTITY
+		camera_pivot.rotate_object_local(Vector3.UP, yaw)
+		camera_pivot.rotate_object_local(Vector3.RIGHT, pitch)
+
+		var cam_forward = -camera_pivot.global_transform.basis.z
+		var cam_right = camera_pivot.global_transform.basis.x
+
+		var move_dir = (cam_right * input_dir.x + cam_forward * input_dir.y).normalized()
+
+		# Project onto surface
+		if move_dir.length_squared() > 0.01:
+			move_dir = move_dir - ground_normal * move_dir.dot(ground_normal)
+			move_dir = move_dir.normalized()
+
+		var speed = sprint_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed
+
+		if input_dir.length() > 0:
+			var target_velocity = move_dir * speed
+			velocity = velocity.lerp(target_velocity, delta * 10.0)
+		else:
+			velocity = velocity.lerp(Vector3.ZERO, delta * 5.0)
+
 	else:
-		velocity.x = move_toward(velocity.x, 0, current_speed)
-		velocity.z = move_toward(velocity.z, 0, current_speed)
+		# Air control - powerful for orbital movement
+		camera_pivot.transform = Transform3D.IDENTITY
+		camera_pivot.rotate_object_local(Vector3.UP, yaw)
+		camera_pivot.rotate_object_local(Vector3.RIGHT, pitch)
+
+		if input_dir.length() > 0:
+			var cam_basis = camera_pivot.global_transform.basis
+			var move_dir = (cam_basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+			velocity += move_dir * sprint_speed * air_control * delta
 
 	move_and_slide()
 
-func align_to_planet() -> void:
-	# Get the up direction (away from planet center)
-	var planet_up = -gravity_direction
+func align_to_surface(up_dir: Vector3, delta: float) -> void:
+	# Smoothly align Y-axis to surface normal
+	var current_up = transform.basis.y
+	var new_up = current_up.slerp(up_dir, delta * 8.0)
 
-	# Smoothly align the character to the planet surface
-	var current_up = global_transform.basis.y
-	var target_basis = global_transform.basis
+	# Preserve forward direction as much as possible
+	var forward = transform.basis.z
+	var right = forward.cross(new_up)
 
-	# Create rotation to align Y axis with up direction
-	var rotation_axis = current_up.cross(planet_up)
-	if rotation_axis.length() > 0.001:
-		var rotation_angle = current_up.angle_to(planet_up)
-		target_basis = target_basis.rotated(rotation_axis.normalized(), rotation_angle * 0.1)
-		global_transform.basis = target_basis
+	# If forward is too aligned with up, use right as reference
+	if right.length_squared() < 0.01:
+		right = transform.basis.x
+
+	right = right.normalized()
+	forward = new_up.cross(right).normalized()
+
+	# Reconstruct basis
+	transform.basis.x = right
+	transform.basis.y = new_up
+	transform.basis.z = forward
 
 func position_on_planet_surface() -> void:
 	# Position character at spawn height above planet center
