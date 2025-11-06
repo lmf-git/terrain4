@@ -379,8 +379,8 @@ func generate_cities_and_caves() -> void:
 
 		var city_node = Node3D.new()
 		city_node.name = "City_" + str(i)
-		city_node.global_position = city_pos
 		add_child(city_node)
+		city_node.global_position = city_pos
 
 		# Generate 5-15 buildings per city
 		var num_buildings = rng.randi_range(5, 15)
