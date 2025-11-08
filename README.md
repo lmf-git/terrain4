@@ -64,14 +64,11 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 - **Scalable**: Perfect for massive planets with millions of triangles
 
 ### 🌍 Spherical Terrain Generation
-- **Cubesphere with Quadtree LOD** (PRIMARY SYSTEM):
+- **Cubesphere with Quadtree LOD**:
   - 6-face cube sphere subdivided dynamically based on camera distance
   - Tectonic plates, cities, airports, and roads fully integrated
   - Frustum culling and distance-based detail management
   - Optimized for massive planetary scales
-- **Legacy Icosphere System** (also available in planet_terrain.gd):
-  - Single-mesh icosphere with fixed subdivision
-  - Good for smaller planets or simpler scenes
 - **Improved smoothness**: 3 octaves of Perlin noise
 - **5-layer noise system**: Mountains, chains, hills, valleys, and fine detail
 - **PBR materials** with proper normal mapping and lighting
@@ -126,10 +123,9 @@ A complete spherical planetary terrain system with water for Godot 4.5, inspired
 ```
 terrain4/
 ├── scenes/
-│   └── main.tscn                   # Main game scene (unified)
+│   └── main.tscn                   # Main game scene
 ├── scripts/
-│   ├── planet_terrain_lod.gd       # LOD chunk-based terrain (PRIMARY)
-│   ├── planet_terrain.gd           # Legacy single-mesh terrain
+│   ├── planet_terrain_lod.gd       # LOD chunk-based terrain
 │   ├── spherical_water.gd          # Water system controller
 │   ├── orbital_camera.gd           # Orbital camera controller
 │   ├── player_character.gd         # Enhanced player controller
@@ -145,7 +141,7 @@ terrain4/
 
 ## Configuration
 
-### LOD Terrain Settings (PlanetTerrainLOD - Primary)
+### Terrain Settings
 Edit in `PlanetTerrain` node:
 
 **Planet Properties:**
@@ -229,7 +225,7 @@ Edit in `Player` node:
 
 ## Technical Details
 
-### LOD Terrain Generation Algorithm (Cubesphere)
+### Terrain Generation Algorithm (Cubesphere LOD)
 1. Creates 6 root chunks (one per cube face)
 2. Each chunk is a quadtree node with UV bounds on its face
 3. Every frame, for each visible chunk:
@@ -246,26 +242,12 @@ Edit in `Player` node:
    - Place cities/airports/caves if they fall within chunk bounds
 5. Chunk resolution scales with LOD level (8-128 vertices per edge)
 
-### Legacy Terrain Generation Algorithm (Icosphere)
-1. Creates base icosahedron (20 faces)
-2. Subdivides faces recursively for desired detail level
-3. Normalizes vertices to sphere surface
-4. Applies 3D noise for seamless heightmap
-5. Generates proper normals and UVs
-6. Creates single mesh with PBR material
-
 ### Water Shader Features
 - **Vertex displacement**: Animated using 3D noise functions
 - **Normal perturbation**: Wave normals calculated from height differences
 - **Fresnel effect**: Angle-dependent transparency and color
 - **Foam rendering**: Based on wave height peaks
 - **Multi-layer waves**: Combined noise at different scales
-
-### LOD System (Framework Ready)
-The terrain generation system is designed to support LOD:
-- LOD distances configured in terrain script
-- _process() function ready for distance-based LOD switching
-- Can be extended to generate multiple mesh levels
 
 ## Performance Tips
 
